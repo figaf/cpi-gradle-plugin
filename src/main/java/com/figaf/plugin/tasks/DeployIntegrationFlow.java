@@ -19,14 +19,14 @@ public class DeployIntegrationFlow extends AbstractIntegrationFlowTask {
     public void doTaskAction() throws Exception {
         System.out.println("deployIntegrationFlow");
         defineParameters();
-        String taskId = cpiClient.deployIFlow(agent, packageExternalId, integrationFlowExternalId, integrationFlowTechnicalName);
+        String taskId = cpiClient.deployIFlow(cpiConnectionProperties, packageExternalId, integrationFlowExternalId, integrationFlowTechnicalName);
         if (waitForStartup == null || !waitForStartup) {
             return;
         }
         int numberOfAttempts = 1;
         boolean deployStatusSuccess = false;
         while (!deployStatusSuccess && numberOfAttempts <= MAX_NUMBER_OF_ATTEMPTS) {
-            String deployStatus = cpiClient.checkDeployStatus(agent, taskId);
+            String deployStatus = cpiClient.checkDeployStatus(cpiConnectionProperties, taskId);
             System.out.println("deployStatus = " + deployStatus);
             if ("SUCCESS".equals(deployStatus)) {
                 deployStatusSuccess = true;
@@ -37,7 +37,7 @@ public class DeployIntegrationFlow extends AbstractIntegrationFlowTask {
         }
         boolean started = false;
         while (!started && numberOfAttempts <= MAX_NUMBER_OF_ATTEMPTS) {
-            IntegrationContent integrationContent = cpiClient.getIntegrationRuntimeArtifactByName(agent, integrationFlowTechnicalName);
+            IntegrationContent integrationContent = cpiClient.getIntegrationRuntimeArtifactByName(cpiConnectionProperties, integrationFlowTechnicalName);
             String integrationRuntimeArtifactStatus = integrationContent.getStatus();
             System.out.println("integrationRuntimeArtifactStatus = " + integrationRuntimeArtifactStatus);
             if ("ERROR".equals(integrationRuntimeArtifactStatus)) {

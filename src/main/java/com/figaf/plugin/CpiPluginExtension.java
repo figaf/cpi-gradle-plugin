@@ -12,11 +12,7 @@ import org.gradle.api.provider.Property;
 @ToString
 public class CpiPluginExtension {
 
-    private final Property<String> protocol;
-
-    private final Property<String> host;
-
-    private final Property<Integer> port;
+    private final Property<String> url;
 
     private final Property<String> username;
 
@@ -35,9 +31,7 @@ public class CpiPluginExtension {
     private final Property<Boolean> waitForStartup;
 
     public CpiPluginExtension(Project project) {
-        this.protocol = project.getObjects().property(String.class);
-        this.host = project.getObjects().property(String.class);
-        this.port = project.getObjects().property(Integer.class);
+        this.url = project.getObjects().property(String.class);
         this.username = project.getObjects().property(String.class);
         this.password = project.getObjects().property(String.class);
         this.sourceFilePath = project.getObjects().property(String.class);

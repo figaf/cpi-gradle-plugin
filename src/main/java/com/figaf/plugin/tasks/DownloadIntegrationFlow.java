@@ -43,12 +43,16 @@ public class DownloadIntegrationFlow extends AbstractIntegrationFlowTask {
                 }
                 if (needToDelete) {
                     if (!Files.isDirectory(path) || path.toFile().list() != null && path.toFile().list().length == 0) {
-                        Files.deleteIfExists(path);
+                        try {
+                            Files.deleteIfExists(path);
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
                     }
                 }
             }
 
-            byte[] bundledModel = cpiClient.downloadIntegrationFlow(agent, packageExternalId, integrationFlowExternalId);
+            byte[] bundledModel = cpiClient.downloadIntegrationFlow(cpiConnectionProperties, packageExternalId, integrationFlowExternalId);
             FileUtils.writeByteArrayToFile(iFlowZipArchiveFile, bundledModel);
             ZipUtil.unpack(iFlowZipArchiveFile, sourceFolder);
         } finally {

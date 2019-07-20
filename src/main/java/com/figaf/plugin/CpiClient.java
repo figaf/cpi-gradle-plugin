@@ -34,11 +34,11 @@ import java.util.List;
 public class CpiClient {
 
     public IntegrationPackage getIntegrationPackageIfExists(
-        Agent agent,
+        CpiConnectionProperties cpiConnectionProperties,
         String packageTechnicalName
     ) {
         List<IntegrationPackage> integrationPackagesSearchResult = getIntegrationPackages(
-            agent,
+            cpiConnectionProperties,
             String.format("TechnicalName eq '%s'", packageTechnicalName)
         );
 
@@ -58,12 +58,12 @@ public class CpiClient {
     }
 
     public CpiIntegrationObjectData getIFlowData(
-        Agent agent,
+        CpiConnectionProperties cpiConnectionProperties,
         String packageTechnicalName,
         String iFlowTechnicalName
     ) {
 
-        List<CpiIntegrationObjectData> integrationFlowsInThePackage = getIntegrationFlowsByPackage(agent, packageTechnicalName);
+        List<CpiIntegrationObjectData> integrationFlowsInThePackage = getIntegrationFlowsByPackage(cpiConnectionProperties, packageTechnicalName);
 
         CpiIntegrationObjectData iFlowCpiIntegrationObjectData = null;
 
@@ -80,28 +80,28 @@ public class CpiClient {
         return iFlowCpiIntegrationObjectData;
     }
 
-    public void deleteIntegrationFlow(Agent agent, String externalPackageId, String externalIFlowId) {
+    public void deleteIntegrationFlow(CpiConnectionProperties cpiConnectionProperties, String externalPackageId, String externalIFlowId) {
         try {
 
             HttpUrl.Builder uriBuilder = new HttpUrl.Builder()
-                .scheme(agent.getProtocol())
-                .host(agent.getHost())
+                .scheme(cpiConnectionProperties.getProtocol())
+                .host(cpiConnectionProperties.getHost())
                 .encodedPath(String.format("/itspaces/api/1.0/workspace/%s/artifacts/%s", externalPackageId, externalIFlowId))
                 .addQueryParameter("$format", "json");
-            if (agent.getPort() != null) {
-                uriBuilder.port(agent.getPort());
+            if (cpiConnectionProperties.getPort() != null) {
+                uriBuilder.port(cpiConnectionProperties.getPort());
             }
             String uri = uriBuilder.build().toString();
 
             HttpClient client = HttpClients.custom().build();
-            Header basicAuthHeader = createBasicAuthHeader(agent);
+            Header basicAuthHeader = createBasicAuthHeader(cpiConnectionProperties);
 
-            String userApiCsrfToken = getCsrfToken(agent, client);
+            String userApiCsrfToken = getCsrfToken(cpiConnectionProperties, client);
 
             HttpResponse deleteIFlowResponse = null;
             boolean locked = false;
             try {
-                lockPackage(agent, externalPackageId, userApiCsrfToken, client, true);
+                lockPackage(cpiConnectionProperties, externalPackageId, userApiCsrfToken, client, true);
                 locked = true;
 
                 HttpDelete deleteIFlowRequest = new HttpDelete(uri);
@@ -127,7 +127,7 @@ public class CpiClient {
             } finally {
                 HttpClientUtils.closeQuietly(deleteIFlowResponse);
                 if (locked) {
-                    unlockPackage(agent, externalPackageId, userApiCsrfToken, client);
+                    unlockPackage(cpiConnectionProperties, externalPackageId, userApiCsrfToken, client);
                 }
             }
         } catch (Exception ex) {
@@ -135,27 +135,27 @@ public class CpiClient {
         }
     }
 
-    public void uploadIntegrationFlow(Agent agent, String externalPackageId, CreateIFlowRequest request, byte[] bundledModel) {
+    public void uploadIntegrationFlow(CpiConnectionProperties cpiConnectionProperties, String externalPackageId, CreateIFlowRequest request, byte[] bundledModel) {
         try {
 
             HttpUrl.Builder uriBuilder = new HttpUrl.Builder()
-                .scheme(agent.getProtocol())
-                .host(agent.getHost())
+                .scheme(cpiConnectionProperties.getProtocol())
+                .host(cpiConnectionProperties.getHost())
                 .encodedPath(String.format("/itspaces/api/1.0/workspace/%s/iflows", externalPackageId));
-            if (agent.getPort() != null) {
-                uriBuilder.port(agent.getPort());
+            if (cpiConnectionProperties.getPort() != null) {
+                uriBuilder.port(cpiConnectionProperties.getPort());
             }
             String uri = uriBuilder.build().toString();
 
             HttpClient client = HttpClients.custom().build();
-            Header basicAuthHeader = createBasicAuthHeader(agent);
+            Header basicAuthHeader = createBasicAuthHeader(cpiConnectionProperties);
 
-            String userApiCsrfToken = getCsrfToken(agent, client);
+            String userApiCsrfToken = getCsrfToken(cpiConnectionProperties, client);
 
             HttpResponse uploadIFlowResponse = null;
             boolean locked = false;
             try {
-                lockPackage(agent, externalPackageId, userApiCsrfToken, client, true);
+                lockPackage(cpiConnectionProperties, externalPackageId, userApiCsrfToken, client, true);
                 locked = true;
 
                 HttpPost uploadIFlowRequest = new HttpPost(uri);
@@ -195,7 +195,7 @@ public class CpiClient {
                     HttpClientUtils.closeQuietly(uploadIFlowResponse);
                 }
                 if (locked) {
-                    unlockPackage(agent, externalPackageId, userApiCsrfToken, client);
+                    unlockPackage(cpiConnectionProperties, externalPackageId, userApiCsrfToken, client);
                 }
             }
 
@@ -205,26 +205,26 @@ public class CpiClient {
         }
     }
 
-    public String deployIFlow(Agent agent, String packageExternalId, String iFlowExternalId, String iFlowTechnicalName) {
+    public String deployIFlow(CpiConnectionProperties cpiConnectionProperties, String packageExternalId, String iFlowExternalId, String iFlowTechnicalName) {
         try {
             HttpUrl.Builder uriBuilder = new HttpUrl.Builder()
-                .scheme(agent.getProtocol())
-                .host(agent.getHost())
+                .scheme(cpiConnectionProperties.getProtocol())
+                .host(cpiConnectionProperties.getHost())
                 .encodedPath(String.format("/itspaces/api/1.0/workspace/%s/artifacts/%s/entities/%s/iflows/%s", packageExternalId, iFlowExternalId, iFlowExternalId, iFlowTechnicalName));
-            if (agent.getPort() != null) {
-                uriBuilder.port(agent.getPort());
+            if (cpiConnectionProperties.getPort() != null) {
+                uriBuilder.port(cpiConnectionProperties.getPort());
             }
             String uri = uriBuilder.build().toString();
 
             HttpClient client = HttpClients.custom().build();
-            Header basicAuthHeader = createBasicAuthHeader(agent);
+            Header basicAuthHeader = createBasicAuthHeader(cpiConnectionProperties);
 
-            String userApiCsrfToken = getCsrfToken(agent, client);
+            String userApiCsrfToken = getCsrfToken(cpiConnectionProperties, client);
 
             HttpResponse deployIFlowResponse = null;
             boolean locked = false;
             try {
-                lockPackage(agent, packageExternalId, userApiCsrfToken, client, true);
+                lockPackage(cpiConnectionProperties, packageExternalId, userApiCsrfToken, client, true);
                 locked = true;
 
                 HttpDeploy deployIFlowRequest = new HttpDeploy(uri);
@@ -251,7 +251,7 @@ public class CpiClient {
             } finally {
                 HttpClientUtils.closeQuietly(deployIFlowResponse);
                 if (locked) {
-                    unlockPackage(agent, packageExternalId, userApiCsrfToken, client);
+                    unlockPackage(cpiConnectionProperties, packageExternalId, userApiCsrfToken, client);
                 }
             }
 
@@ -261,21 +261,21 @@ public class CpiClient {
         }
     }
 
-    public String checkDeployStatus(Agent agent, String taskId) {
+    public String checkDeployStatus(CpiConnectionProperties cpiConnectionProperties, String taskId) {
         try {
             HttpUrl.Builder uriBuilder = new HttpUrl.Builder()
-                .scheme(agent.getProtocol())
-                .host(agent.getHost())
+                .scheme(cpiConnectionProperties.getProtocol())
+                .host(cpiConnectionProperties.getHost())
                 .encodedPath(String.format("/itspaces/api/1.0/deploystatus/%s", taskId))
                 .addQueryParameter("$format", "json");
-            if (agent.getPort() != null) {
-                uriBuilder.port(agent.getPort());
+            if (cpiConnectionProperties.getPort() != null) {
+                uriBuilder.port(cpiConnectionProperties.getPort());
             }
             String uri = uriBuilder.build().toString();
 
             HttpClient client = HttpClients.custom().build();
 
-            Header basicAuthHeader = createBasicAuthHeader(agent);
+            Header basicAuthHeader = createBasicAuthHeader(cpiConnectionProperties);
 
             HttpGet request = new HttpGet(uri);
             request.setHeader("Content-type", "application/json");
@@ -300,21 +300,21 @@ public class CpiClient {
         }
     }
 
-    public IntegrationContent getIntegrationRuntimeArtifactByName(Agent agent, String name) {
+    public IntegrationContent getIntegrationRuntimeArtifactByName(CpiConnectionProperties cpiConnectionProperties, String name) {
         try {
             HttpUrl.Builder uriBuilder = new HttpUrl.Builder()
-                .scheme(agent.getProtocol())
-                .host(agent.getHost())
+                .scheme(cpiConnectionProperties.getProtocol())
+                .host(cpiConnectionProperties.getHost())
                 .encodedPath(String.format("/api/v1/IntegrationRuntimeArtifacts('%s')", name))
                 .addQueryParameter("$format", "json");
-            if (agent.getPort() != null) {
-                uriBuilder.port(agent.getPort());
+            if (cpiConnectionProperties.getPort() != null) {
+                uriBuilder.port(cpiConnectionProperties.getPort());
             }
             String uri = uriBuilder.build().toString();
 
             HttpClient client = HttpClients.custom().build();
 
-            Header basicAuthHeader = createBasicAuthHeader(agent);
+            Header basicAuthHeader = createBasicAuthHeader(cpiConnectionProperties);
 
             HttpGet request = new HttpGet(uri);
             request.setHeader("Content-type", "application/json");
@@ -342,16 +342,16 @@ public class CpiClient {
     }
 
     public byte[] downloadIntegrationFlow(
-        Agent agent,
+        CpiConnectionProperties cpiConnectionProperties,
         String externalPackageId,
         String externalIFlowId) {
         try {
             HttpUrl.Builder uriBuilder = new HttpUrl.Builder()
-                .scheme(agent.getProtocol())
-                .host(agent.getHost())
+                .scheme(cpiConnectionProperties.getProtocol())
+                .host(cpiConnectionProperties.getHost())
                 .encodedPath(String.format("/itspaces/api/1.0/workspace/%s/artifacts/%s/entities/%s", externalPackageId, externalIFlowId, externalIFlowId));
-            if (agent.getPort() != null) {
-                uriBuilder.port(agent.getPort());
+            if (cpiConnectionProperties.getPort() != null) {
+                uriBuilder.port(cpiConnectionProperties.getPort());
             }
             String uri = uriBuilder.build().toString();
 
@@ -361,7 +361,7 @@ public class CpiClient {
             try {
 
                 HttpGet downloadIFlowRequest = new HttpGet(uri);
-                downloadIFlowRequest.setHeader(createBasicAuthHeader(agent));
+                downloadIFlowRequest.setHeader(createBasicAuthHeader(cpiConnectionProperties));
                 downloadIFlowResponse = client.execute(downloadIFlowRequest);
 
                 switch (downloadIFlowResponse.getStatusLine().getStatusCode()) {
@@ -384,23 +384,23 @@ public class CpiClient {
         }
     }
 
-    private List<IntegrationPackage> getIntegrationPackages(Agent agent, String filter) {
+    private List<IntegrationPackage> getIntegrationPackages(CpiConnectionProperties cpiConnectionProperties, String filter) {
         HttpResponse httpResponse;
         try {
 
             HttpUrl.Builder builder = new HttpUrl.Builder()
-                .scheme(agent.getProtocol())
-                .host(agent.getHost())
+                .scheme(cpiConnectionProperties.getProtocol())
+                .host(cpiConnectionProperties.getHost())
                 .encodedPath("/itspaces/odata/1.0/workspace.svc/ContentPackages")
                 .addQueryParameter("$format", "json")
                 .addQueryParameter("$filter", filter);
-            if (agent.getPort() != null) {
-                builder.port(agent.getPort());
+            if (cpiConnectionProperties.getPort() != null) {
+                builder.port(cpiConnectionProperties.getPort());
             }
             String url = builder.build().toString();
 
             HttpGet getRequest = new HttpGet(url);
-            Header basicAuthHeader = createBasicAuthHeader(agent);
+            Header basicAuthHeader = createBasicAuthHeader(cpiConnectionProperties);
             getRequest.setHeader(basicAuthHeader);
             HttpClient httpClient = HttpClients.custom().build();
             httpResponse = httpClient.execute(getRequest);
@@ -438,24 +438,24 @@ public class CpiClient {
     }
 
     private List<CpiIntegrationObjectData> getIntegrationFlowsByPackage(
-        Agent agent,
+        CpiConnectionProperties cpiConnectionProperties,
         String packageTechnicalName
     ) {
         HttpResponse httpResponse = null;
         try {
 
             HttpUrl.Builder uriBuilder = new HttpUrl.Builder()
-                .scheme(agent.getProtocol())
-                .host(agent.getHost())
+                .scheme(cpiConnectionProperties.getProtocol())
+                .host(cpiConnectionProperties.getHost())
                 .encodedPath(String.format("/itspaces/odata/1.0/workspace.svc/ContentPackages('%s')/Artifacts", packageTechnicalName))
                 .addQueryParameter("$format", "json");
-            if (agent.getPort() != null) {
-                uriBuilder.port(agent.getPort());
+            if (cpiConnectionProperties.getPort() != null) {
+                uriBuilder.port(cpiConnectionProperties.getPort());
             }
             String uri = uriBuilder.build().toString();
 
             HttpGet getRequest = new HttpGet(uri);
-            getRequest.setHeader(createBasicAuthHeader(agent));
+            getRequest.setHeader(createBasicAuthHeader(cpiConnectionProperties));
             HttpClient httpClient = HttpClients.custom().build();
             httpResponse = httpClient.execute(getRequest);
 
@@ -497,8 +497,8 @@ public class CpiClient {
         }
     }
 
-    private void lockPackage(Agent agent, String externalPackageId, String csrfToken, HttpClient httpClient, boolean forceLock) {
-        Validate.notNull(agent, "agent must be not null!");
+    private void lockPackage(CpiConnectionProperties cpiConnectionProperties, String externalPackageId, String csrfToken, HttpClient httpClient, boolean forceLock) {
+        Validate.notNull(cpiConnectionProperties, "agent must be not null!");
         Validate.notNull(externalPackageId, "externalPackageId must be not null!");
         Validate.notNull(csrfToken, "csrfToken must be not null!");
         Validate.notNull(httpClient, "httpClient must be not null!");
@@ -507,11 +507,11 @@ public class CpiClient {
         try {
 
             HttpUrl.Builder uriBuilder = new HttpUrl.Builder()
-                .scheme(agent.getProtocol())
-                .host(agent.getHost())
+                .scheme(cpiConnectionProperties.getProtocol())
+                .host(cpiConnectionProperties.getHost())
                 .encodedPath(String.format("/itspaces/api/1.0/workspace/%s", externalPackageId));
-            if (agent.getPort() != null) {
-                uriBuilder.port(agent.getPort());
+            if (cpiConnectionProperties.getPort() != null) {
+                uriBuilder.port(cpiConnectionProperties.getPort());
             }
             if (forceLock) {
                 uriBuilder.addQueryParameter("forcelock", "true");
@@ -520,7 +520,7 @@ public class CpiClient {
 
             HttpLock lockRequest = new HttpLock(uri);
             lockRequest.setHeader(new BasicHeader("X-CSRF-Token", csrfToken));
-            lockRequest.setHeader(createBasicAuthHeader(agent));
+            lockRequest.setHeader(createBasicAuthHeader(cpiConnectionProperties));
 
             lockResponse = httpClient.execute(lockRequest);
 
@@ -543,8 +543,8 @@ public class CpiClient {
         }
     }
 
-    private void unlockPackage(Agent agent, String externalPackageId, String csrfToken, HttpClient httpClient) {
-        Validate.notNull(agent, "agent must be not null!");
+    private void unlockPackage(CpiConnectionProperties cpiConnectionProperties, String externalPackageId, String csrfToken, HttpClient httpClient) {
+        Validate.notNull(cpiConnectionProperties, "agent must be not null!");
         Validate.notNull(externalPackageId, "externalPackageId must be not null!");
         Validate.notNull(csrfToken, "csrfToken must be not null!");
         Validate.notNull(httpClient, "httpClient must be not null!");
@@ -553,17 +553,17 @@ public class CpiClient {
         try {
 
             HttpUrl.Builder uriBuilder = new HttpUrl.Builder()
-                .scheme(agent.getProtocol())
-                .host(agent.getHost())
+                .scheme(cpiConnectionProperties.getProtocol())
+                .host(cpiConnectionProperties.getHost())
                 .encodedPath(String.format("/itspaces/api/1.0/workspace/%s", externalPackageId));
-            if (agent.getPort() != null) {
-                uriBuilder.port(agent.getPort());
+            if (cpiConnectionProperties.getPort() != null) {
+                uriBuilder.port(cpiConnectionProperties.getPort());
             }
             String uri = uriBuilder.build().toString();
 
             HttpUnlock unlockRequest = new HttpUnlock(uri);
             unlockRequest.setHeader(new BasicHeader("X-CSRF-Token", csrfToken));
-            unlockRequest.setHeader(createBasicAuthHeader(agent));
+            unlockRequest.setHeader(createBasicAuthHeader(cpiConnectionProperties));
 
             unlockResponse = httpClient.execute(unlockRequest);
 
@@ -601,25 +601,25 @@ public class CpiClient {
     }
 
 
-    private String getCsrfToken(Agent agent, HttpClient httpClient) {
-        Validate.notNull(agent, "httpClient must be not null!");
+    private String getCsrfToken(CpiConnectionProperties cpiConnectionProperties, HttpClient httpClient) {
+        Validate.notNull(cpiConnectionProperties, "httpClient must be not null!");
         Validate.notNull(httpClient, "httpClient must be not null!");
 
         HttpResponse headResponse = null;
         try {
 
             HttpUrl.Builder uriBuilder = new HttpUrl.Builder()
-                .scheme(agent.getProtocol())
-                .host(agent.getHost())
+                .scheme(cpiConnectionProperties.getProtocol())
+                .host(cpiConnectionProperties.getHost())
                 .encodedPath("/itspaces/api/1.0/user");
-            if (agent.getPort() != null) {
-                uriBuilder.port(agent.getPort());
+            if (cpiConnectionProperties.getPort() != null) {
+                uriBuilder.port(cpiConnectionProperties.getPort());
             }
             String uri = uriBuilder.build().toString();
 
             HttpGet getRequest = new HttpGet(uri);
             getRequest.setHeader("X-CSRF-Token", "Fetch");
-            getRequest.setHeader(createBasicAuthHeader(agent));
+            getRequest.setHeader(createBasicAuthHeader(cpiConnectionProperties));
 
             headResponse = httpClient.execute(getRequest);
 
@@ -644,13 +644,13 @@ public class CpiClient {
         }
     }
 
-    private Header createBasicAuthHeader(Agent agent) {
+    private Header createBasicAuthHeader(CpiConnectionProperties cpiConnectionProperties) {
         return new BasicHeader(
             "Authorization",
             String.format(
                 "Basic %s",
                 Base64.encodeBase64String(
-                    (agent.getUsername() + ":" + agent.getPassword()).getBytes(StandardCharsets.UTF_8)
+                    (cpiConnectionProperties.getUsername() + ":" + cpiConnectionProperties.getPassword()).getBytes(StandardCharsets.UTF_8)
                 )
             )
         );

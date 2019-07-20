@@ -1,7 +1,7 @@
 package com.figaf.plugin.tasks;
 
 import com.figaf.plugin.CpiClient;
-import com.figaf.plugin.entities.Agent;
+import com.figaf.plugin.entities.CpiConnectionProperties;
 import com.figaf.plugin.entities.CpiIntegrationObjectData;
 import com.figaf.plugin.entities.IntegrationPackage;
 import lombok.Setter;
@@ -22,13 +22,7 @@ import java.util.Set;
 public abstract class AbstractIntegrationFlowTask extends DefaultTask {
 
     @Input
-    protected String protocol = "https";
-
-    @Input
-    protected String host;
-
-    @Input
-    protected Integer port = 443;
+    protected String url;
 
     @Input
     protected String username;
@@ -54,23 +48,11 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
     @Input
     protected Set<String> ignoreFilesList;
 
-    protected Agent agent;
+    protected CpiConnectionProperties cpiConnectionProperties;
 
     protected File sourceFolder;
 
     protected CpiClient cpiClient = new CpiClient();
-
-    public void setProtocol(String protocol) {
-        if (StringUtils.isNotEmpty(protocol)) {
-            this.protocol = protocol;
-        }
-    }
-
-    public void setPort(Integer port) {
-        if (port != null && port != 0) {
-            this.port = port;
-        }
-    }
 
     @TaskAction
     public void taskAction() {
@@ -84,7 +66,7 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
     protected abstract void doTaskAction() throws Exception;
 
     protected void defineParameters() {
-        agent = new Agent(protocol, host, port, username, password);
+        cpiConnectionProperties = new CpiConnectionProperties(url, username, password);
         sourceFolder = new File(sourceFilePath);
 
         if (packageTechnicalName == null && integrationFlowTechnicalName == null) {
@@ -93,11 +75,11 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
         }
 
         if (packageExternalId == null) {
-            IntegrationPackage integrationPackage = cpiClient.getIntegrationPackageIfExists(agent, packageTechnicalName);
+            IntegrationPackage integrationPackage = cpiClient.getIntegrationPackageIfExists(cpiConnectionProperties, packageTechnicalName);
             packageExternalId = integrationPackage.getExternalId();
         }
         if (integrationFlowExternalId == null) {
-            CpiIntegrationObjectData cpiIntegrationObjectData = cpiClient.getIFlowData(agent, packageTechnicalName, integrationFlowTechnicalName);
+            CpiIntegrationObjectData cpiIntegrationObjectData = cpiClient.getIFlowData(cpiConnectionProperties, packageTechnicalName, integrationFlowTechnicalName);
             integrationFlowExternalId = cpiIntegrationObjectData.getExternalId();
         }
 
@@ -106,8 +88,9 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
         }
         ignoreFilesList.add("src/test");
         ignoreFilesList.add("build.gradle");
+        ignoreFilesList.add("gradle.properties");
 
-        System.out.println("agent = " + agent);
+        System.out.println("cpiConnectionProperties = " + cpiConnectionProperties);
         System.out.println("packageTechnicalName = " + packageTechnicalName);
         System.out.println("packageExternalId = " + packageExternalId);
         System.out.println("integrationFlowTechnicalName = " + integrationFlowTechnicalName);

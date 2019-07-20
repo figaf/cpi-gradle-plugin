@@ -15,7 +15,7 @@ public class CpiPlugin implements Plugin<Project> {
     @Override
     public void apply(Project project) {
 
-        CpiPluginExtension extension = project.getExtensions().create("cpiPluginExtension", CpiPluginExtension.class, project);
+        CpiPluginExtension extension = project.getExtensions().create("cpiPlugin", CpiPluginExtension.class, project);
 
         project.getTasks().register("uploadIntegrationFlow", UploadIntegrationFlow.class, uploadIntegrationFlow -> applyExtension(uploadIntegrationFlow, extension));
 
@@ -30,9 +30,7 @@ public class CpiPlugin implements Plugin<Project> {
 
     private void applyExtension(AbstractIntegrationFlowTask abstractIntegrationFlowTask, CpiPluginExtension extension) {
         try {
-            abstractIntegrationFlowTask.setProtocol(extension.getProtocol().getOrNull());
-            abstractIntegrationFlowTask.setHost(extension.getHost().getOrNull());
-            abstractIntegrationFlowTask.setPort(extension.getPort().getOrNull());
+            abstractIntegrationFlowTask.setUrl(extension.getUrl().getOrNull());
             abstractIntegrationFlowTask.setUsername(extension.getUsername().getOrNull());
             abstractIntegrationFlowTask.setPassword(extension.getPassword().getOrNull());
             abstractIntegrationFlowTask.setSourceFilePath(extension.getSourceFilePath().getOrNull());

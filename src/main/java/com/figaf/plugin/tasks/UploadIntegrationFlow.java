@@ -49,13 +49,13 @@ public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
             bos.close();
             byte[] bundledModel = bos.toByteArray();
 
-            cpiClient.deleteIntegrationFlow(agent, packageExternalId, integrationFlowExternalId);
+            cpiClient.deleteIntegrationFlow(cpiConnectionProperties, packageExternalId, integrationFlowExternalId);
 
             CreateIFlowRequest uploadIFlowRequest = new CreateIFlowRequest();
             uploadIFlowRequest.setId(integrationFlowTechnicalName);
             uploadIFlowRequest.setName(integrationFlowTechnicalName);
 
-            cpiClient.uploadIntegrationFlow(agent, packageExternalId, uploadIFlowRequest, bundledModel);
+            cpiClient.uploadIntegrationFlow(cpiConnectionProperties, packageExternalId, uploadIFlowRequest, bundledModel);
         } finally {
             FileUtils.deleteDirectory(directoryWithExcludedFiles);
         }
