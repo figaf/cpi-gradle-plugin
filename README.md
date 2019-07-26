@@ -9,10 +9,10 @@ The plugin has 3 tasks
 
 ## Configuration
 The tasks can be configured through an extension `cpiPlugin` which accepts several parameters:
-* `url` - basic path to the CPI agent. Example: `https://p0201-tmn.hci.eu1.hana.ondemand.com`
-* `username` - CPI username. Example: `test`
-* `password` - CPI password. Example: `123456`
-* `sourceFilePath` - path to the directory with the IFlow. Default value: `$project.projectDir` which means
+* `url`* - basic path to the CPI agent. Example: `https://p0201-tmn.hci.eu1.hana.ondemand.com`
+* `username`* - CPI username. Example: `test`
+* `password`* - CPI password. Example: `123456`
+* `sourceFilePath`* - path to the directory with the IFlow. Default value: `$project.projectDir` which means
 that root directory of the IFlow will be taken. In most cases this parameter shouldn't be overridden but it can be any valid path.
 Example: `C:\some\path`
 * `packageTechnicalName` - package technical name. By default the name of the parent folder is used. If your project structure is not standard
@@ -26,4 +26,4 @@ this value, you can define it directly. Example: `2f0d56be14c44a50a3c1e5c1bebc23
 * `waitForStartup` - used only by `deployIntegrationFlow` task. If this parameter is true, the plugin will not only deploy the IFlow but also wait until it's successfully started.
 Default value: `false`. 
 * `ignoreFilesList` - list of files (or directories) which shouldn't be added to the archive when the plugin executes `uploadIntegrationFlow` task and shouldn't be modified when the plugin executes `downloadIntegrationFlow` task.
-The plugin always adds to this list the following paths: `src/test`, `build.gradle`, `gradle.properties`, `settings.gradle`. Example: `[somefile.txt, somefolder]`
+The plugin always adds to this list the following paths: `src/test`, `build.gradle`, `gradle.properties`, `settings.gradle`. Example: `["somefile.txt", "somefolder"]`
