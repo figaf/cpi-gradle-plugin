@@ -67,6 +67,7 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
 
     protected void defineParameters() {
         cpiConnectionProperties = new CpiConnectionProperties(url, username, password);
+        System.out.println("cpiConnectionProperties = " + cpiConnectionProperties);
         sourceFolder = new File(sourceFilePath);
 
         if (packageTechnicalName == null && integrationFlowTechnicalName == null) {
@@ -90,7 +91,6 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
         ignoreFilesList.add("build.gradle");
         ignoreFilesList.add("gradle.properties");
 
-        System.out.println("cpiConnectionProperties = " + cpiConnectionProperties);
         System.out.println("packageTechnicalName = " + packageTechnicalName);
         System.out.println("packageExternalId = " + packageExternalId);
         System.out.println("integrationFlowTechnicalName = " + integrationFlowTechnicalName);
