@@ -10,11 +10,12 @@ import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.utils.HttpClientUtils;
 import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.HttpClients;
@@ -80,68 +81,12 @@ public class CpiClient {
         return iFlowCpiIntegrationObjectData;
     }
 
-    public void deleteIntegrationFlow(CpiConnectionProperties cpiConnectionProperties, String externalPackageId, String externalIFlowId) {
+    public void uploadIntegrationFlow(CpiConnectionProperties cpiConnectionProperties, String externalPackageId, String externalIFlowId, CreateIFlowRequest request, byte[] bundledModel) {
         try {
-
             HttpUrl.Builder uriBuilder = new HttpUrl.Builder()
                 .scheme(cpiConnectionProperties.getProtocol())
                 .host(cpiConnectionProperties.getHost())
-                .encodedPath(String.format("/itspaces/api/1.0/workspace/%s/artifacts/%s", externalPackageId, externalIFlowId))
-                .addQueryParameter("$format", "json");
-            if (cpiConnectionProperties.getPort() != null) {
-                uriBuilder.port(cpiConnectionProperties.getPort());
-            }
-            String uri = uriBuilder.build().toString();
-
-            HttpClient client = HttpClients.custom().build();
-            Header basicAuthHeader = createBasicAuthHeader(cpiConnectionProperties);
-
-            String userApiCsrfToken = getCsrfToken(cpiConnectionProperties, client);
-
-            HttpResponse deleteIFlowResponse = null;
-            boolean locked = false;
-            try {
-                lockPackage(cpiConnectionProperties, externalPackageId, userApiCsrfToken, client, true);
-                locked = true;
-
-                HttpDelete deleteIFlowRequest = new HttpDelete(uri);
-
-                deleteIFlowRequest.setHeader("X-CSRF-Token", userApiCsrfToken);
-                deleteIFlowRequest.setHeader(basicAuthHeader);
-
-                deleteIFlowResponse = client.execute(deleteIFlowRequest);
-
-                switch (deleteIFlowResponse.getStatusLine().getStatusCode()) {
-                    case 200: {
-                        return;
-                    }
-                    default: {
-                        throw new RuntimeException(
-                            String.format("Couldn't execute iFlow deletion:\n Code: %d, Message: %s",
-                                deleteIFlowResponse.getStatusLine().getStatusCode(),
-                                IOUtils.toString(deleteIFlowResponse.getEntity().getContent(), "UTF-8")
-                            )
-                        );
-                    }
-                }
-            } finally {
-                HttpClientUtils.closeQuietly(deleteIFlowResponse);
-                if (locked) {
-                    unlockPackage(cpiConnectionProperties, externalPackageId, userApiCsrfToken, client);
-                }
-            }
-        } catch (Exception ex) {
-            throw new RuntimeException("Error occurred while uploading iFlow: " + ex.getMessage(), ex);
-        }
-    }
-
-    public void uploadIntegrationFlow(CpiConnectionProperties cpiConnectionProperties, String externalPackageId, CreateIFlowRequest request, byte[] bundledModel) {
-        try {
-
-            HttpUrl.Builder uriBuilder = new HttpUrl.Builder()
-                .scheme(cpiConnectionProperties.getProtocol())
-                .host(cpiConnectionProperties.getHost())
-                .encodedPath(String.format("/itspaces/api/1.0/workspace/%s/iflows", externalPackageId));
+                .encodedPath(String.format("/itspaces/api/1.0/workspace/%s/artifacts", externalPackageId));
             if (cpiConnectionProperties.getPort() != null) {
                 uriBuilder.port(cpiConnectionProperties.getPort());
             }
@@ -155,13 +100,15 @@ public class CpiClient {
             HttpResponse uploadIFlowResponse = null;
             boolean locked = false;
             try {
-                lockPackage(cpiConnectionProperties, externalPackageId, userApiCsrfToken, client, true);
+                lockOrUnlockIflow(cpiConnectionProperties, externalPackageId, externalIFlowId, client, "LOCK", true);
+                lockOrUnlockIflow(cpiConnectionProperties, externalPackageId, externalIFlowId, client, "LOCK", false);
                 locked = true;
 
                 HttpPost uploadIFlowRequest = new HttpPost(uri);
 
                 JSONObject requestBody = new JSONObject();
                 requestBody.put("id", request.getId());
+                requestBody.put("entityID", request.getId());
                 requestBody.put("name", request.getName());
                 requestBody.put("description", request.getDescription());
                 requestBody.put("type", request.getType());
@@ -170,9 +117,9 @@ public class CpiClient {
 
                 MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create();
                 entityBuilder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
-                entityBuilder.addBinaryBody("payload", bundledModel, ContentType.DEFAULT_BINARY, "model.zip");
+                entityBuilder.addBinaryBody("simpleUploader", bundledModel, ContentType.DEFAULT_BINARY, "model.zip");
                 entityBuilder.addTextBody("_charset_", "UTF-8");
-                entityBuilder.addTextBody("iflowBrowse-data", requestBody.toString(), ContentType.APPLICATION_JSON);
+                entityBuilder.addTextBody("simpleUploader-data", requestBody.toString(), ContentType.APPLICATION_JSON);
 
                 HttpEntity entity = entityBuilder.build();
                 uploadIFlowRequest.setHeader("X-CSRF-Token", userApiCsrfToken);
@@ -183,6 +130,8 @@ public class CpiClient {
 
                 switch (uploadIFlowResponse.getStatusLine().getStatusCode()) {
                     case 201:
+                        JSONObject jsonObject = new JSONObject(IOUtils.toString(uploadIFlowResponse.getEntity().getContent(), "UTF-8"));
+                        setVersionToIFlow(cpiConnectionProperties, externalPackageId, externalIFlowId, client, jsonObject.getString("bundleVersion"));
                         return;
 
                     default:
@@ -195,7 +144,7 @@ public class CpiClient {
                     HttpClientUtils.closeQuietly(uploadIFlowResponse);
                 }
                 if (locked) {
-                    unlockPackage(cpiConnectionProperties, externalPackageId, userApiCsrfToken, client);
+                    lockOrUnlockIflow(cpiConnectionProperties, externalPackageId, externalIFlowId, client, "UNLOCK", false);
                 }
             }
 
@@ -494,6 +443,94 @@ public class CpiClient {
             return integrationFlows;
         } catch (Exception ex) {
             throw new RuntimeException("Error occurred while getting iFlows: " + ex.getMessage(), ex);
+        }
+    }
+
+    private void lockOrUnlockIflow(CpiConnectionProperties cpiConnectionProperties, String externalPackageId, String iflowExternalId, HttpClient client, String webdav, boolean lockinfo) {
+        try {
+            HttpUrl.Builder uriBuilder = new HttpUrl.Builder()
+                .scheme(cpiConnectionProperties.getProtocol())
+                .host(cpiConnectionProperties.getHost())
+                .encodedPath(String.format("/itspaces/api/1.0/workspace/%s/artifacts/%s", externalPackageId, iflowExternalId))
+                .addQueryParameter("webdav", webdav);
+            if (lockinfo) {
+                uriBuilder.addQueryParameter("lockinfo", "true");
+            }
+            if (cpiConnectionProperties.getPort() != null) {
+                uriBuilder.port(cpiConnectionProperties.getPort());
+            }
+            String uri = uriBuilder.build().toString();
+
+            Header basicAuthHeader = createBasicAuthHeader(cpiConnectionProperties);
+
+            String userApiCsrfToken = getCsrfToken(cpiConnectionProperties, client);
+            HttpPut lockIFlowRequest = new HttpPut(uri);
+            HttpResponse httpResponse = null;
+            try {
+                lockIFlowRequest.setHeader("X-CSRF-Token", userApiCsrfToken);
+                lockIFlowRequest.setHeader(basicAuthHeader);
+                httpResponse = client.execute(lockIFlowRequest);
+
+                switch (httpResponse.getStatusLine().getStatusCode()) {
+                    case 200:
+                        return;
+
+                    default:
+                        throw new RuntimeException("Couldn't lock or unlock iFlow\n" + IOUtils.toString(httpResponse.getEntity().getContent(), "UTF-8"));
+                }
+
+            } finally {
+                HttpClientUtils.closeQuietly(httpResponse);
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException("Error occurred while locking or unlocking iFlow: " + ex.getMessage(), ex);
+        }
+    }
+
+    private void setVersionToIFlow(CpiConnectionProperties cpiConnectionProperties, String externalPackageId, String iflowExternalId, HttpClient client, String version) {
+        try {
+            HttpUrl.Builder uriBuilder = new HttpUrl.Builder()
+                .scheme(cpiConnectionProperties.getProtocol())
+                .host(cpiConnectionProperties.getHost())
+                .encodedPath(String.format("/itspaces/api/1.0/workspace/%s/artifacts/%s", externalPackageId, iflowExternalId))
+                .addQueryParameter("notifications", "true")
+                .addQueryParameter("webdav", "CHECKIN");
+            if (cpiConnectionProperties.getPort() != null) {
+                uriBuilder.port(cpiConnectionProperties.getPort());
+            }
+            String uri = uriBuilder.build().toString();
+
+            Header basicAuthHeader = createBasicAuthHeader(cpiConnectionProperties);
+
+            String userApiCsrfToken = getCsrfToken(cpiConnectionProperties, client);
+            HttpPut httpPutRequest = new HttpPut(uri);
+            HttpResponse httpResponse = null;
+            try {
+                httpPutRequest.setHeader("X-CSRF-Token", userApiCsrfToken);
+                httpPutRequest.setHeader(basicAuthHeader);
+
+                JSONObject requestBody = new JSONObject();
+                requestBody.put("comment", "");
+                requestBody.put("semanticVersion", version);
+
+                HttpEntity entity = new StringEntity(requestBody.toString(), ContentType.APPLICATION_JSON);
+                httpPutRequest.setEntity(entity);
+                httpResponse = client.execute(httpPutRequest);
+
+                switch (httpResponse.getStatusLine().getStatusCode()) {
+                    case 200:
+                        return;
+
+                    default:
+                        throw new RuntimeException("Couldn't set version to IFlow:\n" + IOUtils.toString(httpResponse.getEntity().getContent(), "UTF-8"));
+
+                }
+
+            } finally {
+                HttpClientUtils.closeQuietly(httpResponse);
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException("Error occurred while setting version iFlow: " + ex.getMessage(), ex);
         }
     }
 

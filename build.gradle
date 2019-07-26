@@ -3,6 +3,7 @@ plugins {
     id "java-gradle-plugin"
     id "java"
     id "maven"
+    id 'maven-publish'
 }
 
 dependencies {
@@ -27,7 +28,18 @@ repositories {
 }
 
 group = 'com.figaf'
-version = '1.0-rc1'
+version = '1.0-rc3'
+
+publishing {
+    publications {
+        pluginPublication (MavenPublication) {
+            from    components.java
+            groupId    project.group
+            artifactId    "cpi-plugin"
+            version    project.version
+        }
+    }
+}
 
 gradlePlugin {
     plugins {

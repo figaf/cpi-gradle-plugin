@@ -15,6 +15,6 @@ public class CreateIFlowRequest {
     private String name;
     private String description;
     private String type = "IFlow";
-    private String additionalAttrs = "{\"source\":[\"\"],\"target\":[\"\"],\"productProfile\":[\"iflmap\"],\"nodeType\":[\"IFLMAP\"]}";
+    private String additionalAttrs = "{\"source\":[],\"target\":[]}";
     private String fileName;
 }
