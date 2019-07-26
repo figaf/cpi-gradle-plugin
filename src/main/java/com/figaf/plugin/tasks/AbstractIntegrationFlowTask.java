@@ -90,6 +90,7 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
         ignoreFilesList.add("src/test");
         ignoreFilesList.add("build.gradle");
         ignoreFilesList.add("gradle.properties");
+        ignoreFilesList.add("settings.gradle");
 
         System.out.println("packageTechnicalName = " + packageTechnicalName);
         System.out.println("packageExternalId = " + packageExternalId);

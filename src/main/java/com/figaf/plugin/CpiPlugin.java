@@ -6,6 +6,10 @@ import com.figaf.plugin.tasks.DownloadIntegrationFlow;
 import com.figaf.plugin.tasks.UploadIntegrationFlow;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.provider.SetProperty;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author Arsenii Istlentev
@@ -38,6 +42,12 @@ public class CpiPlugin implements Plugin<Project> {
             abstractIntegrationFlowTask.setPackageExternalId(extension.getPackageExternalId().getOrNull());
             abstractIntegrationFlowTask.setIntegrationFlowTechnicalName(extension.getIntegrationFlowTechnicalName().getOrNull());
             abstractIntegrationFlowTask.setIntegrationFlowExternalId(extension.getIntegrationFlowExternalId().getOrNull());
+            SetProperty<String> ignoreFilesListProperty = extension.getIgnoreFilesList();
+            Set<String> ignoreFilesList = new HashSet<>();
+            if (ignoreFilesListProperty != null && ignoreFilesListProperty.isPresent()) {
+                ignoreFilesList.addAll(ignoreFilesListProperty.get());
+            }
+            abstractIntegrationFlowTask.setIgnoreFilesList(ignoreFilesList);
         } catch (Exception ex) {
             ex.printStackTrace();
             throw ex;

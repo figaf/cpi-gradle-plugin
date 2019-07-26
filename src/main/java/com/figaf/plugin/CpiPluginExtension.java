@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.ToString;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.SetProperty;
 
 /**
  * @author Arsenii Istlentev
@@ -30,6 +31,8 @@ public class CpiPluginExtension {
 
     private final Property<Boolean> waitForStartup;
 
+    private final SetProperty<String> ignoreFilesList;
+
     public CpiPluginExtension(Project project) {
         this.url = project.getObjects().property(String.class);
         this.username = project.getObjects().property(String.class);
@@ -40,5 +43,6 @@ public class CpiPluginExtension {
         this.integrationFlowTechnicalName = project.getObjects().property(String.class);
         this.integrationFlowExternalId = project.getObjects().property(String.class);
         this.waitForStartup = project.getObjects().property(Boolean.class);
+        this.ignoreFilesList = project.getObjects().setProperty(String.class);
     }
 }
