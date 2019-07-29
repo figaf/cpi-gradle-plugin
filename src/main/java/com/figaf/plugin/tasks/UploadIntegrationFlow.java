@@ -4,6 +4,7 @@ import com.figaf.plugin.entities.CreateIFlowRequest;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.gradle.api.tasks.Input;
 import org.zeroturnaround.zip.ZipUtil;
 
 import java.io.ByteArrayOutputStream;
@@ -22,6 +23,9 @@ import java.util.UUID;
 @Slf4j
 @Setter
 public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
+
+    @Input
+    private Boolean uploadDraftVersions;
 
     public void doTaskAction() throws IOException {
         defineParameters();
@@ -53,7 +57,7 @@ public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
             uploadIFlowRequest.setId(integrationFlowExternalId);
             uploadIFlowRequest.setName(integrationFlowTechnicalName);
 
-            cpiClient.uploadIntegrationFlow(cpiConnectionProperties, packageExternalId, integrationFlowExternalId, uploadIFlowRequest, bundledModel);
+            cpiClient.uploadIntegrationFlow(cpiConnectionProperties, packageExternalId, integrationFlowExternalId, uploadIFlowRequest, bundledModel, uploadDraftVersions);
         } finally {
             FileUtils.deleteDirectory(directoryWithExcludedFiles);
         }

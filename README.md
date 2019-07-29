@@ -9,8 +9,8 @@ The plugin has 3 tasks
 
 ## Configuration
 The tasks can be configured through an extension `cpiPlugin` which accepts several parameters:
-* `url`* - basic path to the CPI agent. Example: `https://p0201-tmn.hci.eu1.hana.ondemand.com`
-* `username`* - CPI username. Example: `test`
+* `url`* - basic path to the CPI agent. Example: `https://pxxxx-tmn.hci.eu1.hana.ondemand.com`
+* `username`* - CPI username. Example: `S00000000`
 * `password`* - CPI password. Example: `123456`
 * `sourceFilePath`* - path to the directory with the IFlow. Default value: `$project.projectDir` which means
 that root directory of the IFlow will be taken. In most cases this parameter shouldn't be overridden but it can be any valid path.
@@ -27,3 +27,5 @@ this value, you can define it directly. Example: `2f0d56be14c44a50a3c1e5c1bebc23
 Default value: `false`. 
 * `ignoreFilesList` - list of files (or directories) which shouldn't be added to the archive when the plugin executes `uploadIntegrationFlow` task and shouldn't be modified when the plugin executes `downloadIntegrationFlow` task.
 The plugin always adds to this list the following paths: `src/test`, `build.gradle`, `gradle.properties`, `settings.gradle`. Example: `["somefile.txt", "somefolder"]`
+* `uploadDraftVersions` - used only by `uploadIntegrationFlow` task. if true it will upload the IFlow with "Draft" version number. If false it will use
+the number from MANIFEST file.

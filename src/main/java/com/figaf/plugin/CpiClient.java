@@ -81,7 +81,7 @@ public class CpiClient {
         return iFlowCpiIntegrationObjectData;
     }
 
-    public void uploadIntegrationFlow(CpiConnectionProperties cpiConnectionProperties, String externalPackageId, String externalIFlowId, CreateIFlowRequest request, byte[] bundledModel) {
+    public void uploadIntegrationFlow(CpiConnectionProperties cpiConnectionProperties, String externalPackageId, String externalIFlowId, CreateIFlowRequest request, byte[] bundledModel, Boolean uploadDraftVersions) {
         try {
             HttpUrl.Builder uriBuilder = new HttpUrl.Builder()
                 .scheme(cpiConnectionProperties.getProtocol())
@@ -131,7 +131,9 @@ public class CpiClient {
                 switch (uploadIFlowResponse.getStatusLine().getStatusCode()) {
                     case 201:
                         JSONObject jsonObject = new JSONObject(IOUtils.toString(uploadIFlowResponse.getEntity().getContent(), "UTF-8"));
-                        setVersionToIFlow(cpiConnectionProperties, externalPackageId, externalIFlowId, client, jsonObject.getString("bundleVersion"));
+                        if (uploadDraftVersions == null || !uploadDraftVersions) {
+                            setVersionToIFlow(cpiConnectionProperties, externalPackageId, externalIFlowId, client, jsonObject.getString("bundleVersion"));
+                        }
                         return;
 
                     default:

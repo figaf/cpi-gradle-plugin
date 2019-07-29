@@ -21,7 +21,10 @@ public class CpiPlugin implements Plugin<Project> {
 
         CpiPluginExtension extension = project.getExtensions().create("cpiPlugin", CpiPluginExtension.class, project);
 
-        project.getTasks().register("uploadIntegrationFlow", UploadIntegrationFlow.class, uploadIntegrationFlow -> applyExtension(uploadIntegrationFlow, extension));
+        project.getTasks().register("uploadIntegrationFlow", UploadIntegrationFlow.class, uploadIntegrationFlow -> {
+            applyExtension(uploadIntegrationFlow, extension);
+            uploadIntegrationFlow.setUploadDraftVersions(extension.getUploadDraftVersions().getOrNull());
+        });
 
         project.getTasks().register("deployIntegrationFlow", DeployIntegrationFlow.class, deployIntegrationFlow -> {
             applyExtension(deployIntegrationFlow, extension);
