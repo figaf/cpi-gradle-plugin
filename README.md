@@ -27,5 +27,5 @@ this value, you can define it directly. Example: `2f0d56be14c44a50a3c1e5c1bebc23
 Default value: `false`. 
 * `ignoreFilesList` - list of files (or directories) which shouldn't be added to the archive when the plugin executes `uploadIntegrationFlow` task and shouldn't be modified when the plugin executes `downloadIntegrationFlow` task.
 The plugin always adds to this list the following paths: `src/test`, `build.gradle`, `gradle.properties`, `settings.gradle`. Example: `["somefile.txt", "somefolder"]`
-* `uploadDraftVersions` - used only by `uploadIntegrationFlow` task. if true it will upload the IFlow with "Draft" version number. If false it will use
-the number from MANIFEST file.
+* `uploadDraftVersion` - used only by `uploadIntegrationFlow` task. if true it will upload the IFlow with "Draft" version number. If false it will use
+the number from MANIFEST file. Default value: `false`.

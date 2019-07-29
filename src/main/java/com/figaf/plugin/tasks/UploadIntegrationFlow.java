@@ -25,7 +25,7 @@ import java.util.UUID;
 public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
 
     @Input
-    private Boolean uploadDraftVersions;
+    private Boolean uploadDraftVersion;
 
     public void doTaskAction() throws IOException {
         defineParameters();
@@ -57,7 +57,7 @@ public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
             uploadIFlowRequest.setId(integrationFlowExternalId);
             uploadIFlowRequest.setName(integrationFlowTechnicalName);
 
-            cpiClient.uploadIntegrationFlow(cpiConnectionProperties, packageExternalId, integrationFlowExternalId, uploadIFlowRequest, bundledModel, uploadDraftVersions);
+            cpiClient.uploadIntegrationFlow(cpiConnectionProperties, packageExternalId, integrationFlowExternalId, uploadIFlowRequest, bundledModel, uploadDraftVersion);
         } finally {
             FileUtils.deleteDirectory(directoryWithExcludedFiles);
         }

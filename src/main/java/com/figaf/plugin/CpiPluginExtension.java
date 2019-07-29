@@ -33,7 +33,7 @@ public class CpiPluginExtension {
 
     private final SetProperty<String> ignoreFilesList;
 
-    private final Property<Boolean> uploadDraftVersions;
+    private final Property<Boolean> uploadDraftVersion;
 
     public CpiPluginExtension(Project project) {
         this.url = project.getObjects().property(String.class);
@@ -46,6 +46,6 @@ public class CpiPluginExtension {
         this.integrationFlowExternalId = project.getObjects().property(String.class);
         this.waitForStartup = project.getObjects().property(Boolean.class);
         this.ignoreFilesList = project.getObjects().setProperty(String.class);
-        this.uploadDraftVersions = project.getObjects().property(Boolean.class);
+        this.uploadDraftVersion = project.getObjects().property(Boolean.class);
     }
 }

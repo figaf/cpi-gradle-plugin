@@ -23,7 +23,7 @@ public class CpiPlugin implements Plugin<Project> {
 
         project.getTasks().register("uploadIntegrationFlow", UploadIntegrationFlow.class, uploadIntegrationFlow -> {
             applyExtension(uploadIntegrationFlow, extension);
-            uploadIntegrationFlow.setUploadDraftVersions(extension.getUploadDraftVersions().getOrNull());
+            uploadIntegrationFlow.setUploadDraftVersion(extension.getUploadDraftVersion().getOrNull());
         });
 
         project.getTasks().register("deployIntegrationFlow", DeployIntegrationFlow.class, deployIntegrationFlow -> {
