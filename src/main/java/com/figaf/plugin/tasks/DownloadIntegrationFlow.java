@@ -42,7 +42,7 @@ public class DownloadIntegrationFlow extends AbstractIntegrationFlowTask {
                     }
                 }
                 if (needToDelete) {
-                    if (!Files.isDirectory(path) || path.toFile().list() != null && path.toFile().list().length == 0) {
+                    if (!Files.isDirectory(path) || path.toFile().list() != null && path.toFile().list().length == 0 && !path.equals(sourceFolder.toPath())) {
                         try {
                             Files.deleteIfExists(path);
                         } catch (Exception ex) {
