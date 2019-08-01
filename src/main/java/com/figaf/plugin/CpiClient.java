@@ -251,6 +251,50 @@ public class CpiClient {
         }
     }
 
+    public List<String> getIntegrationRuntimeErrorInformation(CpiConnectionProperties cpiConnectionProperties, String name) throws Exception {
+        List<String> errorMessages = new ArrayList<>();
+
+        HttpUrl.Builder uriBuilder = new HttpUrl.Builder()
+            .scheme(cpiConnectionProperties.getProtocol())
+            .host(cpiConnectionProperties.getHost())
+            .encodedPath(String.format("/api/v1/IntegrationRuntimeArtifacts('%s')/ErrorInformation/$value", name));
+        if (cpiConnectionProperties.getPort() != null) {
+            uriBuilder.port(cpiConnectionProperties.getPort());
+        }
+        String uri = uriBuilder.build().toString();
+
+        HttpClient client = HttpClients.custom().build();
+
+        Header basicAuthHeader = createBasicAuthHeader(cpiConnectionProperties);
+
+        HttpGet request = new HttpGet(uri);
+        request.setHeader("Content-type", "application/json");
+        request.setHeader(basicAuthHeader);
+        HttpResponse response = null;
+        try {
+            response = client.execute(request);
+            switch (response.getStatusLine().getStatusCode()) {
+                case 200: {
+                    JSONObject jsonObject = new JSONObject(IOUtils.toString(response.getEntity().getContent(), "UTF-8"));
+                    JSONArray childInstances = jsonObject.getJSONArray("childInstances");
+                    for (int i = 0; i < childInstances.length(); i++) {
+                        JSONObject child = childInstances.getJSONObject(i);
+                        JSONArray parameters = child.getJSONArray("parameter");
+                        for (int j = 0; j < parameters.length(); j++) {
+                            errorMessages.add(parameters.getString(j));
+                        }
+                    }
+                    return errorMessages;
+                }
+                default: {
+                    throw new RuntimeException("Couldn't get error messages:\n" + IOUtils.toString(response.getEntity().getContent(), "UTF-8"));
+                }
+            }
+        } finally {
+            HttpClientUtils.closeQuietly(response);
+        }
+    }
+
     public IntegrationContent getIntegrationRuntimeArtifactByName(CpiConnectionProperties cpiConnectionProperties, String name) {
         try {
             HttpUrl.Builder uriBuilder = new HttpUrl.Builder()

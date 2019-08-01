@@ -2,7 +2,10 @@ package com.figaf.plugin.tasks;
 
 import com.figaf.plugin.entities.IntegrationContent;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.tasks.Input;
+
+import java.util.List;
 
 /**
  * @author Arsenii Istlentev
@@ -30,9 +33,11 @@ public class DeployIntegrationFlow extends AbstractIntegrationFlowTask {
             System.out.println("deployStatus = " + deployStatus);
             if ("SUCCESS".equals(deployStatus)) {
                 deployStatusSuccess = true;
-            } else {
+            } else if ("DEPLOYING".equals(deployStatus)){
                 numberOfAttempts++;
                 Thread.sleep(SLEEP_TIME);
+            } else {
+                throw new RuntimeException(String.format("Deployment of IFlow %s has failed", integrationFlowTechnicalName));
             }
         }
         boolean started = false;
@@ -41,7 +46,17 @@ public class DeployIntegrationFlow extends AbstractIntegrationFlowTask {
             String integrationRuntimeArtifactStatus = integrationContent.getStatus();
             System.out.println("integrationRuntimeArtifactStatus = " + integrationRuntimeArtifactStatus);
             if ("ERROR".equals(integrationRuntimeArtifactStatus)) {
-                throw new RuntimeException(String.format("Deployment of IFlow %s has failed", integrationFlowTechnicalName));
+                List<String> errorMessages = null;
+                try {
+                    errorMessages = cpiClient.getIntegrationRuntimeErrorInformation(cpiConnectionProperties, integrationFlowTechnicalName);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+                if (errorMessages != null) {
+                    throw new RuntimeException(String.format("Deployment of IFlow %s has failed. Error messages: %s", integrationFlowTechnicalName, StringUtils.join(errorMessages,", ")));
+                } else {
+                    throw new RuntimeException(String.format("Deployment of IFlow %s has failed", integrationFlowTechnicalName));
+                }
             } else if (!"STARTED".equals(integrationRuntimeArtifactStatus)) {
                 numberOfAttempts++;
                 Thread.sleep(SLEEP_TIME);
