@@ -60,6 +60,7 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
             doTaskAction();
         } catch (Exception ex) {
             ex.printStackTrace();
+            throw new RuntimeException(ex);
         }
     }
 
