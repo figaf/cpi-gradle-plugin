@@ -3,7 +3,7 @@ This plugin provides an integration with SAP CPI platform.
 
 ## Requirements
 
-Gradle 4.10 or later, Java 8 or later.
+Gradle 4.10 or later.
 
 ## Getting started
 
