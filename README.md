@@ -1,11 +1,109 @@
 # cpi-gradle-plugin
-This plugin provides an integration with SAP CPI platform.
+This plugin provides an integration with SAP CPI platform. 
+
+## Requirements
+
+Gradle 4.10 or later, Java 8 or later.
+
+## Getting started
+
+You need to organize modular structure, where each separate IFlow folder is a Gradle module.
+Default project structure:
+```
+rootProject
+├── package1TechnicalName
+│   ├── iFlow1TechnicalName
+│   │   ├── META-INF
+│   │   │   └── MANIFEST.MF 
+│   │   ├── src   
+│   │   │   └── ...
+│   │   └── ...
+│   ├── iFlow2TechnicalName
+│   │   ├── META-INF
+│   │   │   └── MANIFEST.MF
+│   │   ├── src   
+│   │   │   └── ...
+│   │   │   
+│   │   └── ...  
+│   └── ...     
+├── package2TechnicalName
+│   ├── iFlow3TechnicalName
+│   │   ├── META-INF
+│   │   │   └── MANIFEST.MF
+│   │   ├── src   
+│   │   │   └── ...
+│   │   └── ...
+│   ├── iFlow4TechnicalName
+│   │   ├── META-INF
+│   │   │   └── MANIFEST.MF 
+│   │   ├── src   
+│   │   │   └── ...  
+│   │   └── ...  
+│   └── ...  
+├── ...
+├── build.gradle
+└── gradle.properties
+```
+You can download IFlow archives from CPI manually and then unpack them to the project or just use `downloadIntegrationFlow` task 
+to fetch and automatically unpack bundled IFlow. Just create a high-level folder structure for needed IFlow: 
+`packageTechnicalName/iflowTechnicalName`, register that folder as a module in `settings.gradle` (see later) and run 
+`downloadIntegrationFlow` task.
+
+build.gradle
+```
+plugins {
+    id 'com.figaf.cpi-plugin' version '1.0.RELEASE' apply false
+}
+
+subprojects { sub->
+
+    apply plugin: 'com.figaf.cpi-plugin'
+
+    cpiPlugin {
+        url = cpiUrl
+        username = cpiUsername
+        password = cpiPassword
+        waitForStartup = true
+        sourceFilePath = "$project.projectDir".toString()
+        uploadDraftVersion = true
+    }
+}
+```
+
+settings.gradle
+```
+pluginManagement {
+    repositories {
+        mavenLocal()
+        gradlePluginPortal()
+    }
+}
+
+include "package1TechnicalName-iFlow1TechnicalName"
+project (":package1TechnicalName-iFlow1TechnicalName").projectDir = file("package1TechnicalName/iFlow1TechnicalName")
+
+include "package1TechnicalName-iFlow2TechnicalName"
+project (":package1TechnicalName-iFlow2TechnicalName").projectDir = file("package1TechnicalName/iFlow2TechnicalName")
+
+include "package2TechnicalName-iFlow3TechnicalName"
+project (":package2TechnicalName-iFlow3TechnicalName").projectDir = file("package2TechnicalName/iFlow3TechnicalName")
+
+include "package2TechnicalName-iFlow4TechnicalName"
+project (":package2TechnicalName-iFlow4TechnicalName").projectDir = file("package2TechnicalName/iFlow4TechnicalName")
+```
+
+gradle.properties
+```
+cpiUrl=https://pxxxx-tmn.hci.eu1.hana.ondemand.com
+cpiUsername=S00000000
+cpiPassword=123456
+```
 
 ## Tasks
 The plugin has 3 tasks
-1. `uploadIntegrationFlow` - upload IFlow to CPI
-2. `deployIntegrationFlow` - deploy IFlow to CPI. Usually it makes sense to run this task after `uploadIntegrationFlow`
-3. `downloadIntegrationFlow` - download IFlow from CPI to the repository.
+1. `uploadIntegrationFlow` - builds bundled model of IFlow and uploads it to CPI.
+2. `deployIntegrationFlow` - deploys IFlow on CPI. Usually it makes sense to run this task after `uploadIntegrationFlow`.
+3. `downloadIntegrationFlow` - downloads IFlow bundled model from CPI and unpacks it to module folder.
 
 ## Configuration
 The tasks can be configured through an extension `cpiPlugin` which accepts several parameters:

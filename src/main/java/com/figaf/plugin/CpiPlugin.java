@@ -22,21 +22,24 @@ public class CpiPlugin implements Plugin<Project> {
         CpiPluginExtension extension = project.getExtensions().create("cpiPlugin", CpiPluginExtension.class, project);
 
         project.getTasks().register("uploadIntegrationFlow", UploadIntegrationFlow.class, uploadIntegrationFlow -> {
-            applyExtension(uploadIntegrationFlow, extension);
+            applyExtension(uploadIntegrationFlow, extension, "Builds bundled model of IFlow and uploads it to CPI.");
             uploadIntegrationFlow.setUploadDraftVersion(extension.getUploadDraftVersion().getOrNull());
         });
 
         project.getTasks().register("deployIntegrationFlow", DeployIntegrationFlow.class, deployIntegrationFlow -> {
-            applyExtension(deployIntegrationFlow, extension);
+            applyExtension(deployIntegrationFlow, extension, "Deploys IFlow on CPI. Usually it makes sense to run this task after 'uploadIntegrationFlow'.");
             deployIntegrationFlow.setWaitForStartup(extension.getWaitForStartup().getOrNull());
         });
 
-        project.getTasks().register("downloadIntegrationFlow", DownloadIntegrationFlow.class, downloadIntegrationFlow -> applyExtension(downloadIntegrationFlow, extension));
+        project.getTasks().register("downloadIntegrationFlow", DownloadIntegrationFlow.class, downloadIntegrationFlow ->
+            applyExtension(downloadIntegrationFlow, extension, "Downloads IFlow bundled model from CPI and unpacks it to module folder."));
 
     }
 
-    private void applyExtension(AbstractIntegrationFlowTask abstractIntegrationFlowTask, CpiPluginExtension extension) {
+    private void applyExtension(AbstractIntegrationFlowTask abstractIntegrationFlowTask, CpiPluginExtension extension, String taskDescription) {
         try {
+            abstractIntegrationFlowTask.setGroup("cpi-plugin");
+            abstractIntegrationFlowTask.setDescription(taskDescription);
             abstractIntegrationFlowTask.setUrl(extension.getUrl().getOrNull());
             abstractIntegrationFlowTask.setUsername(extension.getUsername().getOrNull());
             abstractIntegrationFlowTask.setPassword(extension.getPassword().getOrNull());
