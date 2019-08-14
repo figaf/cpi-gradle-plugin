@@ -1,0 +1,64 @@
+plugins {
+    id 'com.gradle.plugin-publish' version '0.10.1'
+    id "java-gradle-plugin"
+    id "java"
+    id "maven"
+    id 'maven-publish'
+}
+
+dependencies {
+    compile gradleApi()
+    compileOnly 'org.projectlombok:lombok:1.18.8'
+    annotationProcessor 'org.projectlombok:lombok:1.18.8'
+    compile group: 'commons-codec', name: 'commons-codec', version: '1.2'
+    compile group: 'commons-io', name: 'commons-io', version: '2.5'
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.9'
+    compile group: 'org.apache.commons', name: 'commons-collections4', version: '4.4'
+    compile group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.4.10'
+    compile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.3'
+    compile group: 'org.apache.httpcomponents', name: 'httpmime', version: '4.5.3'
+    compile group: 'org.json', name: 'json', version: '20180813'
+    compile group: 'org.zeroturnaround', name: 'zt-zip', version: '1.13'
+    compile group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.0.0'
+    testCompile group: 'junit', name: 'junit', version: '4.4'
+}
+
+repositories {
+    jcenter()
+}
+
+group = 'com.figaf'
+version = '1.0.RELEASE'
+
+publishing {
+    publications {
+        pluginPublication (MavenPublication) {
+            from    components.java
+            groupId    project.group
+            artifactId    "cpi-plugin"
+            version    project.version
+        }
+    }
+}
+
+gradlePlugin {
+    plugins {
+        cpiPlugin {
+            id = 'com.figaf.cpi-plugin'
+            implementationClass = 'com.figaf.plugin.CpiPlugin'
+        }
+    }
+}
+
+pluginBundle {
+    website = 'https://github.com/figaf/cpi-gradle-plugin'
+    vcsUrl = 'https://github.com/figaf/cpi-gradle-plugin.git'
+    description = 'Figaf SAP CPI Plugin'
+    tags = ['sap', 'cpi', 'figaf']
+
+    plugins {
+        cpiPlugin {
+            displayName = 'Figaf SAP CPI Plugin'
+        }
+    }
+}
