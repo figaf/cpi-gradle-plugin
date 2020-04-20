@@ -109,11 +109,13 @@ public class CpiClient {
                 JSONObject requestBody = new JSONObject();
                 requestBody.put("id", request.getId());
                 requestBody.put("entityID", request.getId());
-                requestBody.put("name", request.getName());
+                requestBody.put("name", request.getDisplayedName());
                 requestBody.put("description", request.getDescription());
                 requestBody.put("type", request.getType());
                 requestBody.put("additionalAttrs", new JSONObject(request.getAdditionalAttrs()));
                 requestBody.put("fileName", "model.zip");
+
+                System.out.println("requestBody = " + requestBody);
 
                 MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create();
                 entityBuilder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
