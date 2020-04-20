@@ -71,8 +71,14 @@ public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
             uploadIFlowRequest.setDescription(properties.getProperty("description"));
 
             CreateIFlowRequest.AdditionalAttributes additionalAttributes = new CreateIFlowRequest.AdditionalAttributes();
-            additionalAttributes.getSource().add(properties.getProperty("source"));
-            additionalAttributes.getTarget().add(properties.getProperty("target"));
+            String sourceValue = properties.getProperty("source");
+            if (sourceValue != null) {
+                additionalAttributes.getSource().add(sourceValue);
+            }
+            String targetValue = properties.getProperty("target");
+            if (targetValue != null) {
+                additionalAttributes.getTarget().add(targetValue);
+            }
             uploadIFlowRequest.setAdditionalAttrs(additionalAttributes);
 
             cpiClient.uploadIntegrationFlow(cpiConnectionProperties, packageExternalId, integrationFlowExternalId, uploadIFlowRequest, bundledModel, uploadDraftVersion);
