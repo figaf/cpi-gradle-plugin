@@ -12,7 +12,7 @@ import lombok.ToString;
 @ToString
 public class CreateIFlowRequest {
     private String id;
-    private String name;
+    private String displayedName;
     private String description;
     private String type = "IFlow";
     private String additionalAttrs = "{\"source\":[],\"target\":[]}";
