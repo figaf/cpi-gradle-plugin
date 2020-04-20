@@ -7,15 +7,14 @@ import org.apache.commons.io.FileUtils;
 import org.gradle.api.tasks.Input;
 import org.zeroturnaround.zip.ZipUtil;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,7 +27,6 @@ import java.util.regex.Pattern;
 public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
 
     private final Pattern integrationFlowDisplayedNamePattern = Pattern.compile("Bundle-Name:\\s*(.*)");
-    private final Pattern integrationFlowDescriptionPattern = Pattern.compile("description=(.*)");
 
     @Input
     private Boolean uploadDraftVersion;
@@ -59,7 +57,8 @@ public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
                 log.error("integrationFlowDisplayedName is null, integrationFlowTechnicalName will be used instead");
                 integrationFlowDisplayedName = integrationFlowTechnicalName;
             }
-            String integrationFlowDescription = retrieveDescription(directoryWithExcludedFiles);
+
+            Properties properties = getMetainfoProperties(directoryWithExcludedFiles);
 
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             ZipUtil.pack(directoryWithExcludedFiles, bos);
@@ -69,7 +68,12 @@ public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
             CreateIFlowRequest uploadIFlowRequest = new CreateIFlowRequest();
             uploadIFlowRequest.setId(integrationFlowExternalId);
             uploadIFlowRequest.setDisplayedName(integrationFlowDisplayedName);
-            uploadIFlowRequest.setDescription(integrationFlowDescription);
+            uploadIFlowRequest.setDescription(properties.getProperty("description"));
+
+            CreateIFlowRequest.AdditionalAttributes additionalAttributes = new CreateIFlowRequest.AdditionalAttributes();
+            additionalAttributes.getSource().add(properties.getProperty("source"));
+            additionalAttributes.getTarget().add(properties.getProperty("target"));
+            uploadIFlowRequest.setAdditionalAttrs(additionalAttributes);
 
             cpiClient.uploadIntegrationFlow(cpiConnectionProperties, packageExternalId, integrationFlowExternalId, uploadIFlowRequest, bundledModel, uploadDraftVersion);
         } finally {
@@ -93,20 +97,22 @@ public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
         return integrationFlowDisplayedName;
     }
 
-    private String retrieveDescription(File directoryWithExcludedFiles) {
-        String integrationFlowDescription = null;
+    private Properties getMetainfoProperties(File directoryWithExcludedFiles) throws IOException {
+        InputStream inputStream = null;
         try {
             Path metainfoFilePath = Paths.get(directoryWithExcludedFiles.getPath(), "metainfo.prop");
-            File metainfoFile = metainfoFilePath.toFile();
-            String metainfoFileContent = FileUtils.readFileToString(metainfoFile, StandardCharsets.UTF_8);
-            Matcher metainfoMatcher = integrationFlowDescriptionPattern.matcher(metainfoFileContent);
-            if (metainfoMatcher.find()) {
-                integrationFlowDescription = metainfoMatcher.group(1);
-            }
+            inputStream = new FileInputStream(metainfoFilePath.toFile());
+            Properties properties = new Properties();
+            properties.load(inputStream);
+            return properties;
         } catch (Exception ex) {
-            log.error("Cannot retrieve 'description' from metainfo.prop: ", ex);
+            ex.printStackTrace();
+            throw new RuntimeException("Cannot read values from metainfo.prop: ", ex);
+        } finally {
+            if (inputStream != null) {
+                inputStream.close();
+            }
         }
-        return integrationFlowDescription;
     }
 
 }
