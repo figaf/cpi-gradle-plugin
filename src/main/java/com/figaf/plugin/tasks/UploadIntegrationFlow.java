@@ -8,7 +8,6 @@ import org.gradle.api.tasks.Input;
 import org.zeroturnaround.zip.ZipUtil;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -16,8 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.jar.Manifest;
 
 /**
  * @author Arsenii Istlentev
@@ -25,8 +23,6 @@ import java.util.regex.Pattern;
 @Slf4j
 @Setter
 public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
-
-    private final Pattern integrationFlowDisplayedNamePattern = Pattern.compile("Bundle-Name:\\s*(.*)");
 
     @Input
     private Boolean uploadDraftVersion;
@@ -52,7 +48,8 @@ public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
                 return accept;
             });
 
-            String integrationFlowDisplayedName = retrieveDisplayedName(directoryWithExcludedFiles);
+            Manifest manifest = parseManifestFile(directoryWithExcludedFiles);
+            String integrationFlowDisplayedName = manifest.getMainAttributes().getValue("Bundle-Name");
             if (integrationFlowDisplayedName == null) {
                 log.error("integrationFlowDisplayedName is null, integrationFlowTechnicalName will be used instead");
                 integrationFlowDisplayedName = integrationFlowTechnicalName;
@@ -81,26 +78,28 @@ public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
             }
             uploadIFlowRequest.setAdditionalAttrs(additionalAttributes);
 
-            cpiClient.uploadIntegrationFlow(cpiConnectionProperties, packageExternalId, integrationFlowExternalId, uploadIFlowRequest, bundledModel, uploadDraftVersion);
+            cpiClient.uploadIntegrationFlow(
+                cpiConnectionProperties,
+                packageExternalId,
+                integrationFlowExternalId,
+                uploadIFlowRequest,
+                bundledModel,
+                uploadDraftVersion,
+                manifest.getMainAttributes().getValue("Bundle-Version")
+            );
         } finally {
             FileUtils.deleteDirectory(directoryWithExcludedFiles);
         }
     }
 
-    private String retrieveDisplayedName(File directoryWithExcludedFiles) {
-        String integrationFlowDisplayedName = null;
-        try {
-            Path manifestFilePath = Paths.get(directoryWithExcludedFiles.getPath(), "META-INF/MANIFEST.MF");
-            File manifestFile = manifestFilePath.toFile();
-            String manifestFileContent = FileUtils.readFileToString(manifestFile, StandardCharsets.UTF_8);
-            Matcher displayedNameMatcher = integrationFlowDisplayedNamePattern.matcher(manifestFileContent);
-            if (displayedNameMatcher.find()) {
-                integrationFlowDisplayedName = displayedNameMatcher.group(1);
-            }
+    private Manifest parseManifestFile(File directoryWithExcludedFiles) {
+        Path manifestFilePath = Paths.get(directoryWithExcludedFiles.getPath(), "META-INF/MANIFEST.MF");
+        try (FileInputStream fis = new FileInputStream(manifestFilePath.toFile())) {
+            return new Manifest(fis);
         } catch (Exception ex) {
             log.error("Cannot retrieve 'Bundle-Name' from MANIFEST.MF: ", ex);
+            throw new IllegalStateException("Cannot retrieve 'Bundle-Name' from MANIFEST.MF", ex);
         }
-        return integrationFlowDisplayedName;
     }
 
     private Properties getMetainfoProperties(File directoryWithExcludedFiles) throws IOException {

@@ -50,6 +50,8 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
 
     protected CpiConnectionProperties cpiConnectionProperties;
 
+    protected String deployedBundleVersion;
+
     protected File sourceFolder;
 
     protected CpiClient cpiClient = new CpiClient();
@@ -80,10 +82,14 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
             IntegrationPackage integrationPackage = cpiClient.getIntegrationPackageIfExists(cpiConnectionProperties, packageTechnicalName);
             packageExternalId = integrationPackage.getExternalId();
         }
+
+        CpiIntegrationObjectData cpiIntegrationObjectData = cpiClient.getIFlowData(cpiConnectionProperties, packageTechnicalName, integrationFlowTechnicalName);
+
         if (integrationFlowExternalId == null) {
-            CpiIntegrationObjectData cpiIntegrationObjectData = cpiClient.getIFlowData(cpiConnectionProperties, packageTechnicalName, integrationFlowTechnicalName);
             integrationFlowExternalId = cpiIntegrationObjectData.getExternalId();
         }
+
+        deployedBundleVersion = cpiIntegrationObjectData.getVersion();
 
         if (CollectionUtils.isEmpty(ignoreFilesList)) {
             ignoreFilesList = new HashSet<>();
@@ -97,6 +103,7 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
         System.out.println("packageExternalId = " + packageExternalId);
         System.out.println("integrationFlowTechnicalName = " + integrationFlowTechnicalName);
         System.out.println("integrationFlowExternalId = " + integrationFlowExternalId);
+        System.out.println("deployedBundleVersion = " + deployedBundleVersion);
         System.out.println("ignoreFilesList = " + ignoreFilesList);
     }
 }
