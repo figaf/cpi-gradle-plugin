@@ -81,7 +81,15 @@ public class CpiClient {
         return iFlowCpiIntegrationObjectData;
     }
 
-    public void uploadIntegrationFlow(CpiConnectionProperties cpiConnectionProperties, String externalPackageId, String externalIFlowId, CreateIFlowRequest request, byte[] bundledModel, Boolean uploadDraftVersion) {
+    public void uploadIntegrationFlow(
+        CpiConnectionProperties cpiConnectionProperties,
+        String externalPackageId,
+        String externalIFlowId,
+        CreateIFlowRequest request,
+        byte[] bundledModel,
+        Boolean uploadDraftVersion,
+        String newIflowVersion
+    ) {
         try {
             HttpUrl.Builder uriBuilder = new HttpUrl.Builder()
                 .scheme(cpiConnectionProperties.getProtocol())
@@ -134,7 +142,16 @@ public class CpiClient {
                     case 201:
                         JSONObject jsonObject = new JSONObject(IOUtils.toString(uploadIFlowResponse.getEntity().getContent(), "UTF-8"));
                         if (uploadDraftVersion == null || !uploadDraftVersion) {
-                            setVersionToIFlow(cpiConnectionProperties, externalPackageId, externalIFlowId, client, jsonObject.getString("bundleVersion"));
+                            System.out.println(String.format("Assigning version %s to iflow", jsonObject.getString("bundleVersion")));
+                            setVersionToIFlow(
+                                cpiConnectionProperties,
+                                externalPackageId,
+                                externalIFlowId,
+                                client,
+                                newIflowVersion
+                            );
+                        } else {
+                            System.out.println("Iflow uploaded as draft version");
                         }
                         return;
 
