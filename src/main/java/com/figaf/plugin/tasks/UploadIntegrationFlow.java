@@ -1,10 +1,19 @@
 package com.figaf.plugin.tasks;
 
 import com.figaf.plugin.entities.CreateIFlowRequest;
+import com.figaf.plugin.entities.CreateIntegrationPackageRequest;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.dom4j.Document;
+import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
 import org.gradle.api.tasks.Input;
+import org.jaxen.JaxenException;
+import org.jaxen.dom4j.Dom4jXPath;
 import org.zeroturnaround.zip.ZipUtil;
 
 import java.io.*;
@@ -16,19 +25,24 @@ import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.jar.Manifest;
+import java.util.regex.Pattern;
 
 /**
  * @author Arsenii Istlentev
+ * @author Sergey Klochkov
  */
 @Slf4j
 @Setter
 public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
 
+    private static final Pattern NS_ELEMENT_WITHOUT_PREFIX_PATTERN = Pattern.compile("(?<!./)/([\\w-_.]+)(?!\\w*:)");
+    private static final Pattern NS_ELEMENT_WITH_PREFIX_PATTERN = Pattern.compile("/(\\w+):([\\w-_.]+)");
+
     @Input
     private Boolean uploadDraftVersion;
 
     public void doTaskAction() throws IOException {
-        defineParameters();
+        defineParameters(false);
         Path pathToDirectoryWithExcludedFiles = Files.createTempDirectory("cpi-plugin-upload-iflow-" + UUID.randomUUID().toString());
         File directoryWithExcludedFiles = pathToDirectoryWithExcludedFiles.toFile();
         try {
@@ -62,8 +76,55 @@ public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
             bos.close();
             byte[] bundledModel = bos.toByteArray();
 
+            if (packageExternalId == null) {
+
+                CreateIntegrationPackageRequest createIntegrationPackageRequest = new CreateIntegrationPackageRequest();
+                createIntegrationPackageRequest.setTechnicalName(packageTechnicalName);
+
+                Path packageInfoPath = Paths.get(sourceFolder.getParentFile().getAbsolutePath(), "/integration-package-info.xml");
+                File packageInfoFile = packageInfoPath.toFile();
+
+                if (packageInfoFile.exists() && packageInfoFile.isFile()) {
+
+                    Document document = parseDocument(packageInfoFile);
+
+                    List<Element> elements = selectNodes(document, "/entry/content/properties/DisplayName");
+                    if (CollectionUtils.isNotEmpty(elements)) {
+                        createIntegrationPackageRequest.setDisplayName(
+                            elements.get(0).getStringValue()
+                        );
+                    }
+
+                    elements = selectNodes(document, "/entry/content/properties/ShortText");
+                    if (CollectionUtils.isNotEmpty(elements)) {
+                        createIntegrationPackageRequest.setShortDescription(
+                            elements.get(0).getStringValue()
+                        );
+                    }
+
+                    elements = selectNodes(document, "/entry/content/properties/Vendor");
+                    if (CollectionUtils.isNotEmpty(elements)) {
+                        createIntegrationPackageRequest.setVendor(
+                            elements.get(0).getStringValue()
+                        );
+                    }
+
+                    elements = selectNodes(document, "/entry/content/properties/Version");
+                    if (CollectionUtils.isNotEmpty(elements)) {
+                        createIntegrationPackageRequest.setVersion(
+                            elements.get(0).getStringValue()
+                        );
+                    }
+
+                } else {
+                    createIntegrationPackageRequest.setDisplayName(packageTechnicalName);
+                    createIntegrationPackageRequest.setVersion("1.0.0");
+                }
+
+                packageExternalId = cpiClient.createIntegrationPackage(cpiConnectionProperties, createIntegrationPackageRequest);
+            }
+
             CreateIFlowRequest uploadIFlowRequest = new CreateIFlowRequest();
-            uploadIFlowRequest.setId(integrationFlowExternalId);
             uploadIFlowRequest.setDisplayedName(integrationFlowDisplayedName);
             uploadIFlowRequest.setDescription(properties.getProperty("description"));
 
@@ -78,15 +139,26 @@ public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
             }
             uploadIFlowRequest.setAdditionalAttrs(additionalAttributes);
 
-            cpiClient.uploadIntegrationFlow(
-                cpiConnectionProperties,
-                packageExternalId,
-                integrationFlowExternalId,
-                uploadIFlowRequest,
-                bundledModel,
-                uploadDraftVersion,
-                manifest.getMainAttributes().getValue("Bundle-Version")
-            );
+            if (integrationFlowExternalId == null) {
+                uploadIFlowRequest.setId(integrationFlowTechnicalName);
+                cpiClient.createIntegrationFlow(
+                    cpiConnectionProperties,
+                    packageExternalId,
+                    uploadIFlowRequest,
+                    bundledModel
+                );
+            } else {
+                uploadIFlowRequest.setId(integrationFlowExternalId);
+                cpiClient.uploadIntegrationFlow(
+                    cpiConnectionProperties,
+                    packageExternalId,
+                    integrationFlowExternalId,
+                    uploadIFlowRequest,
+                    bundledModel,
+                    uploadDraftVersion,
+                    manifest.getMainAttributes().getValue("Bundle-Version")
+                );
+            }
         } finally {
             FileUtils.deleteDirectory(directoryWithExcludedFiles);
         }
@@ -117,6 +189,53 @@ public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
             if (inputStream != null) {
                 inputStream.close();
             }
+        }
+    }
+
+    private Document parseDocument(File xmlFile) {
+        FileInputStream bais = null;
+        Document document;
+        try {
+            bais = new FileInputStream(xmlFile);
+            SAXReader reader = new SAXReader();
+            document = reader.read(bais);
+        } catch (Exception ex) {
+            String errorMsg = String.format("Error while parsing xml document: %s", ex.getMessage());
+            log.error(errorMsg, ex);
+            throw new RuntimeException(errorMsg, ex);
+        } finally {
+            IOUtils.closeQuietly(bais);
+        }
+
+        return document;
+    }
+
+    public <T> List<T> selectNodes(Document document, String xPathString) {
+        if (!isXPathString(xPathString)) {
+            return new ArrayList<>();
+        } else {
+            try {
+                if (StringUtils.isNotBlank(xPathString)) {
+                    xPathString = xPathString.replaceAll(NS_ELEMENT_WITH_PREFIX_PATTERN.pattern(), "/*[name()='$1:$2']");
+                    xPathString = xPathString.replaceAll(NS_ELEMENT_WITHOUT_PREFIX_PATTERN.pattern(), "/*[local-name()='$1']");
+                }
+
+                Dom4jXPath xPath = new Dom4jXPath(xPathString);
+                return xPath.selectNodes(document);
+            } catch (Exception ex) {
+                String errorMsg = String.format("Error while applying xPath to xml document: %s", ex.getMessage());
+                log.error(errorMsg, ex);
+                throw new RuntimeException(errorMsg, ex);
+            }
+        }
+    }
+
+    public boolean isXPathString(String xPathString) {
+        try {
+            Dom4jXPath xPath = new Dom4jXPath(xPathString);
+            return xPathString.contains("/");
+        } catch (JaxenException ex) {
+            return false;
         }
     }
 

@@ -31,6 +31,7 @@ import java.util.List;
 
 /**
  * @author Arsenii Istlentev
+ * @author Sergey Klochkov
  */
 public class CpiClient {
 
@@ -54,7 +55,7 @@ public class CpiClient {
                 )
             );
         } else {
-            throw new RuntimeException(String.format("Cannot find package with name %s", packageTechnicalName));
+            return null;
         }
     }
 
@@ -75,9 +76,6 @@ public class CpiClient {
             }
         }
 
-        if (iFlowCpiIntegrationObjectData == null) {
-            throw new RuntimeException(String.format("Cannot find iflow with name %s in package %s", iFlowTechnicalName, packageTechnicalName));
-        }
         return iFlowCpiIntegrationObjectData;
     }
 
@@ -395,6 +393,154 @@ public class CpiClient {
 
         } catch (Exception ex) {
             throw new RuntimeException("Error occurred while while downloading an iFlow: " + ex.getMessage(), ex);
+        }
+    }
+
+    public String createIntegrationPackage(
+        CpiConnectionProperties cpiConnectionProperties,
+        CreateIntegrationPackageRequest request
+    ) {
+        try {
+            HttpUrl.Builder uriBuilder = new HttpUrl.Builder()
+                .scheme(cpiConnectionProperties.getProtocol())
+                .host(cpiConnectionProperties.getHost())
+                .encodedPath("/itspaces/odata/1.0/workspace.svc/ContentEntities.ContentPackages");
+
+            if (cpiConnectionProperties.getPort() != null) {
+                uriBuilder.port(cpiConnectionProperties.getPort());
+            }
+
+            String uri = uriBuilder.build().toString();
+
+            HttpClient client = HttpClients.custom().build();
+            Header basicAuthHeader = createBasicAuthHeader(cpiConnectionProperties);
+
+            String userApiCsrfToken = getCsrfToken(cpiConnectionProperties, client);
+
+            HttpResponse createIntegrationPackageResponse = null;
+            try {
+
+                HttpPost createIntegrationPackageRequest = new HttpPost(uri);
+
+                JSONObject requestBody = new JSONObject();
+                requestBody.put("TechnicalName", request.getTechnicalName());
+                requestBody.put("DisplayName", request.getDisplayName());
+                requestBody.put("ShortText", request.getShortDescription());
+                requestBody.put("Vendor", request.getVendor());
+                requestBody.put("Version", request.getVersion());
+                requestBody.put("Category", "Integration");
+                requestBody.put("SupportedPlatforms", "SAP HANA Cloud Integration");
+
+                System.out.println("requestBody = " + requestBody);
+
+                createIntegrationPackageRequest.setHeader("X-CSRF-Token", userApiCsrfToken);
+                createIntegrationPackageRequest.setHeader(basicAuthHeader);
+                createIntegrationPackageRequest.setHeader("Accept", "application/json");
+                createIntegrationPackageRequest.setEntity(new StringEntity(requestBody.toString(), ContentType.APPLICATION_JSON));
+
+                createIntegrationPackageResponse = client.execute(createIntegrationPackageRequest);
+
+                switch (createIntegrationPackageResponse.getStatusLine().getStatusCode()) {
+                    case 201:
+                        JSONObject createdIntegrationPackage = new JSONObject(
+                            IOUtils.toString(
+                                createIntegrationPackageResponse.getEntity().getContent(),
+                                "UTF-8"
+                            )
+                        ).getJSONObject("d");
+                        return createdIntegrationPackage.getString("reg_id");
+
+                    default:
+                        throw new RuntimeException(String.format(
+                            "Couldn't create package %s: Code: %d, Message: %s",
+                            request.getTechnicalName(),
+                            createIntegrationPackageResponse.getStatusLine().getStatusCode(),
+                            IOUtils.toString(createIntegrationPackageResponse.getEntity().getContent(), "UTF-8"))
+                        );
+                }
+
+            } finally {
+                HttpClientUtils.closeQuietly(createIntegrationPackageResponse);
+            }
+
+        } catch (Exception ex) {
+            throw new RuntimeException("Error occurred while creating integration package: " + ex.getMessage(), ex);
+        }
+    }
+
+    public void createIntegrationFlow(
+        CpiConnectionProperties cpiConnectionProperties,
+        String externalPackageId,
+        CreateIFlowRequest request,
+        byte[] bundledModel
+    ) {
+        try {
+            HttpUrl.Builder uriBuilder = new HttpUrl.Builder()
+                .scheme(cpiConnectionProperties.getProtocol())
+                .host(cpiConnectionProperties.getHost())
+                .encodedPath(String.format("/itspaces/api/1.0/workspace/%s/iflows", externalPackageId));
+
+            if (cpiConnectionProperties.getPort() != null) {
+                uriBuilder.port(cpiConnectionProperties.getPort());
+            }
+
+            String uri = uriBuilder.build().toString();
+
+            HttpClient client = HttpClients.custom().build();
+            Header basicAuthHeader = createBasicAuthHeader(cpiConnectionProperties);
+
+            String userApiCsrfToken = getCsrfToken(cpiConnectionProperties, client);
+
+            HttpResponse uploadIFlowResponse = null;
+
+            boolean locked = false;
+            try {
+                lockPackage(cpiConnectionProperties, externalPackageId, userApiCsrfToken, client, true);
+                locked = true;
+
+                HttpPost uploadIFlowRequest = new HttpPost(uri);
+
+                JSONObject requestBody = new JSONObject();
+                requestBody.put("id", request.getId());
+                requestBody.put("name", request.getDisplayedName());
+                requestBody.put("description", request.getDescription());
+                requestBody.put("type", request.getType());
+                requestBody.put("additionalAttrs", new JSONObject(request.getAdditionalAttrs()));
+                requestBody.put("fileName", "model.zip");
+
+                System.out.println("requestBody = " + requestBody);
+
+                MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create();
+                entityBuilder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+                entityBuilder.addBinaryBody("simpleUploader", bundledModel, ContentType.DEFAULT_BINARY, "model.zip");
+                entityBuilder.addTextBody("_charset_", "UTF-8");
+                entityBuilder.addTextBody("iflowBrowse-data", requestBody.toString(), ContentType.APPLICATION_JSON);
+
+                HttpEntity entity = entityBuilder.build();
+                uploadIFlowRequest.setHeader("X-CSRF-Token", userApiCsrfToken);
+                uploadIFlowRequest.setHeader(basicAuthHeader);
+                uploadIFlowRequest.setEntity(entity);
+
+                uploadIFlowResponse = client.execute(uploadIFlowRequest);
+
+                switch (uploadIFlowResponse.getStatusLine().getStatusCode()) {
+                    case 201:
+                        return;
+
+                    default:
+                        throw new RuntimeException("Couldn't execute iFlow uploading:\n" + IOUtils.toString(uploadIFlowResponse.getEntity().getContent(), "UTF-8"));
+
+                }
+
+            } finally {
+                HttpClientUtils.closeQuietly(uploadIFlowResponse);
+                if (locked) {
+                    unlockPackage(cpiConnectionProperties, externalPackageId, userApiCsrfToken, client);
+                }
+            }
+
+        } catch (Exception ex) {
+            throw new RuntimeException("Error occurred while uploading iFlow: " + ex.getMessage(), ex);
         }
     }
 
