@@ -21,7 +21,7 @@ public class DeployIntegrationFlow extends AbstractIntegrationFlowTask {
 
     public void doTaskAction() throws Exception {
         System.out.println("deployIntegrationFlow");
-        defineParameters();
+        defineParameters(true);
         String taskId = cpiClient.deployIFlow(cpiConnectionProperties, packageExternalId, integrationFlowExternalId, integrationFlowTechnicalName);
         if (waitForStartup == null || !waitForStartup) {
             return;
