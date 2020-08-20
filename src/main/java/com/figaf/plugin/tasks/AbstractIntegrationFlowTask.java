@@ -6,7 +6,6 @@ import com.figaf.plugin.entities.CpiIntegrationObjectData;
 import com.figaf.plugin.entities.IntegrationPackage;
 import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
@@ -37,16 +36,14 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
     protected String packageTechnicalName;
 
     @Input
-    protected String packageExternalId;
-
-    @Input
     protected String integrationFlowTechnicalName;
 
     @Input
+    protected Set<String> ignoreFilesList;
+
     protected String integrationFlowExternalId;
 
-    @Input
-    protected Set<String> ignoreFilesList;
+    protected String packageExternalId;
 
     protected CpiConnectionProperties cpiConnectionProperties;
 
@@ -68,7 +65,7 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
 
     protected abstract void doTaskAction() throws Exception;
 
-    protected void defineParameters() {
+    protected void defineParameters(boolean checkObjectsExistence) {
         cpiConnectionProperties = new CpiConnectionProperties(url, username, password);
         System.out.println("cpiConnectionProperties = " + cpiConnectionProperties);
         sourceFolder = new File(sourceFilePath);
@@ -78,18 +75,25 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
             integrationFlowTechnicalName = sourceFolder.getName();
         }
 
-        if (packageExternalId == null) {
-            IntegrationPackage integrationPackage = cpiClient.getIntegrationPackageIfExists(cpiConnectionProperties, packageTechnicalName);
+        IntegrationPackage integrationPackage = cpiClient.getIntegrationPackageIfExists(cpiConnectionProperties, packageTechnicalName);
+
+        if (integrationPackage != null) {
             packageExternalId = integrationPackage.getExternalId();
+        } else if (checkObjectsExistence) {
+            throw new RuntimeException(String.format("Cannot find package with name %s", packageTechnicalName));
         }
 
-        CpiIntegrationObjectData cpiIntegrationObjectData = cpiClient.getIFlowData(cpiConnectionProperties, packageTechnicalName, integrationFlowTechnicalName);
+        // if packageExternalId == null then package doesn't exist and hence iFlow doesn't exist
+        if (packageExternalId != null) {
+            CpiIntegrationObjectData cpiIntegrationObjectData = cpiClient.getIFlowData(cpiConnectionProperties, packageTechnicalName, integrationFlowTechnicalName);
 
-        if (integrationFlowExternalId == null) {
-            integrationFlowExternalId = cpiIntegrationObjectData.getExternalId();
+            if (cpiIntegrationObjectData != null) {
+                integrationFlowExternalId = cpiIntegrationObjectData.getExternalId();
+                deployedBundleVersion = cpiIntegrationObjectData.getVersion();
+            } else if (checkObjectsExistence) {
+                throw new RuntimeException(String.format("Cannot find iflow with name %s in package %s", integrationFlowTechnicalName, packageTechnicalName));
+            }
         }
-
-        deployedBundleVersion = cpiIntegrationObjectData.getVersion();
 
         if (CollectionUtils.isEmpty(ignoreFilesList)) {
             ignoreFilesList = new HashSet<>();

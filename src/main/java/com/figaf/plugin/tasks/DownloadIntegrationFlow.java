@@ -22,7 +22,7 @@ public class DownloadIntegrationFlow extends AbstractIntegrationFlowTask {
 
     public void doTaskAction() throws IOException {
         System.out.println("downloadIntegrationFlow");
-        defineParameters();
+        defineParameters(true);
 
         Path pathToIFlowZipArchive = Files.createTempFile(integrationFlowTechnicalName, ".zip");
         File iFlowZipArchiveFile = pathToIFlowZipArchive.toFile();
