@@ -1,5 +1,6 @@
 # cpi-gradle-plugin
-This plugin provides an integration with SAP CPI platform. 
+This plugin provides an integration with SAP CPI platform. It can be used as standalone plugin.
+The easist way to use the plugin is to use the Figaf DevOps Tool, since it will create the folder structure you need to manage your SAP CPI. You can see how to configure the tool here https://figaf.com/sap-cpi-development-in-git-and-debug-your-groovy-scripts/
 
 ## Requirements
 
