@@ -114,6 +114,7 @@ The tasks can be configured through an extension `cpiPlugin` which accepts sever
 * `url`* - basic path to the CPI agent. Example: `https://pxxxx-tmn.hci.eu1.hana.ondemand.com`
 * `username`* - CPI username. Example: `S00000000`
 * `password`* - CPI password. Example: `123456`
+* `platformType`* - CPI platform type. `NEO` or `CLOUD_FOUNDRY`. Default value: `NEO`.
 * `sourceFilePath`* - path to the directory with the IFlow. Default value: `$project.projectDir` which means
 that root directory of the IFlow will be taken. In most cases this parameter shouldn't be overridden but it can be any valid path.
 Example: `C:\some\path`
