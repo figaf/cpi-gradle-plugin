@@ -65,6 +65,7 @@ subprojects { sub->
         url = cpiUrl
         username = cpiUsername
         password = cpiPassword
+        platformType = cpiPlatformType
         waitForStartup = true
         sourceFilePath = "$project.projectDir".toString()
         uploadDraftVersion = true
@@ -99,6 +100,7 @@ gradle.properties
 cpiUrl=https://pxxxx-tmn.hci.eu1.hana.ondemand.com
 cpiUsername=S00000000
 cpiPassword=123456
+cpiPlatformType=NEO
 ```
 
 ## Tasks
