@@ -244,7 +244,7 @@ public class CpiCommonClientWrapper {
             url, initialPath, signature, additionalHeaders, responseType
         ));
 
-        String cookie = String.format("fragmentAfterLogin=; locationAfterLogin=%s; signature=%s", URLEncoder.encode(initialPath), signature);
+        String cookie = String.format("fragmentAfterLogin=; locationAfterLogin=%s; signature=%s", URLEncoder.encode(initialPath, "UTF-8"), signature);
         HttpHeaders headers = new HttpHeaders();
         headers.add("Cookie", cookie);
         if (additionalHeaders != null) {
