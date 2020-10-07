@@ -32,7 +32,7 @@ repositories {
 }
 
 group = 'com.figaf'
-version = '1.5.SNAPSHOT'
+version = '1.5.SNAPSHOT-rc2'
 
 publishing {
     publications {
