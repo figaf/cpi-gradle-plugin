@@ -21,4 +21,7 @@ public class IntegrationContent {
     private String deployedBy;
     private Date deployedOn;
     private String status;
+
+    //only for CLOUD_FOUNDRY
+    private String externalId;
 }

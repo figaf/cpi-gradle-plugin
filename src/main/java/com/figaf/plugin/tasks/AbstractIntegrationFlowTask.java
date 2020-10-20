@@ -1,8 +1,11 @@
 package com.figaf.plugin.tasks;
 
-import com.figaf.plugin.CpiClient;
+import com.figaf.plugin.client.IntegrationFlowClient;
+import com.figaf.plugin.client.IntegrationPackageClient;
+import com.figaf.plugin.client.IntegrationRuntimeClient;
 import com.figaf.plugin.entities.CpiConnectionProperties;
 import com.figaf.plugin.entities.CpiIntegrationObjectData;
+import com.figaf.plugin.entities.CpiPlatformType;
 import com.figaf.plugin.entities.IntegrationPackage;
 import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
@@ -30,6 +33,9 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
     protected String password;
 
     @Input
+    protected CpiPlatformType platformType;
+
+    @Input
     protected String sourceFilePath;
 
     @Input
@@ -51,7 +57,9 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
 
     protected File sourceFolder;
 
-    protected CpiClient cpiClient = new CpiClient();
+    protected final IntegrationPackageClient integrationPackageClient = new IntegrationPackageClient();
+    protected final IntegrationFlowClient integrationFlowClient = new IntegrationFlowClient();
+    protected final IntegrationRuntimeClient integrationRuntimeClient = new IntegrationRuntimeClient();
 
     @TaskAction
     public void taskAction() {
@@ -66,7 +74,7 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
     protected abstract void doTaskAction() throws Exception;
 
     protected void defineParameters(boolean checkObjectsExistence) {
-        cpiConnectionProperties = new CpiConnectionProperties(url, username, password);
+        cpiConnectionProperties = new CpiConnectionProperties(url, username, password, platformType);
         System.out.println("cpiConnectionProperties = " + cpiConnectionProperties);
         sourceFolder = new File(sourceFilePath);
 
@@ -75,7 +83,7 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
             integrationFlowTechnicalName = sourceFolder.getName();
         }
 
-        IntegrationPackage integrationPackage = cpiClient.getIntegrationPackageIfExists(cpiConnectionProperties, packageTechnicalName);
+        IntegrationPackage integrationPackage = integrationPackageClient.getIntegrationPackageIfExists(cpiConnectionProperties, packageTechnicalName);
 
         if (integrationPackage != null) {
             packageExternalId = integrationPackage.getExternalId();
@@ -85,7 +93,7 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
 
         // if packageExternalId == null then package doesn't exist and hence iFlow doesn't exist
         if (packageExternalId != null) {
-            CpiIntegrationObjectData cpiIntegrationObjectData = cpiClient.getIFlowData(cpiConnectionProperties, packageTechnicalName, integrationFlowTechnicalName);
+            CpiIntegrationObjectData cpiIntegrationObjectData = integrationFlowClient.getIFlowData(cpiConnectionProperties, packageTechnicalName, integrationFlowTechnicalName);
 
             if (cpiIntegrationObjectData != null) {
                 integrationFlowExternalId = cpiIntegrationObjectData.getExternalId();

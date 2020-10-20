@@ -1,5 +1,6 @@
 package com.figaf.plugin;
 
+import com.figaf.plugin.entities.CpiPlatformType;
 import com.figaf.plugin.tasks.AbstractIntegrationFlowTask;
 import com.figaf.plugin.tasks.DeployIntegrationFlow;
 import com.figaf.plugin.tasks.DownloadIntegrationFlow;
@@ -43,6 +44,12 @@ public class CpiPlugin implements Plugin<Project> {
             abstractIntegrationFlowTask.setUrl(extension.getUrl().getOrNull());
             abstractIntegrationFlowTask.setUsername(extension.getUsername().getOrNull());
             abstractIntegrationFlowTask.setPassword(extension.getPassword().getOrNull());
+            String cpiPlatformTypeString = extension.getPlatformType().getOrNull();
+            if (cpiPlatformTypeString != null) {
+                abstractIntegrationFlowTask.setPlatformType(CpiPlatformType.valueOf(cpiPlatformTypeString));
+            } else {
+                abstractIntegrationFlowTask.setPlatformType(CpiPlatformType.NEO);
+            }
             abstractIntegrationFlowTask.setSourceFilePath(extension.getSourceFilePath().getOrNull());
             abstractIntegrationFlowTask.setPackageTechnicalName(extension.getPackageTechnicalName().getOrNull());
             abstractIntegrationFlowTask.setPackageExternalId(extension.getPackageExternalId().getOrNull());
