@@ -34,7 +34,7 @@ repositories {
 }
 
 group = 'com.figaf'
-version = '1.5.SNAPSHOT-rc3'
+version = '1.5.1.RELEASE'
 
 publishing {
     publications {
