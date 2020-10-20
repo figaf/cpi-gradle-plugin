@@ -52,7 +52,7 @@ public class DownloadIntegrationFlow extends AbstractIntegrationFlowTask {
                 }
             }
 
-            byte[] bundledModel = integrationFlowClient.downloadIntegrationFlow(cpiConnectionProperties, packageExternalId, integrationFlowExternalId);
+            byte[] bundledModel = cpiIntegrationFlowClient.downloadArtifact(commonClientWrapperEntity, packageExternalId, integrationFlowExternalId);
             FileUtils.writeByteArrayToFile(iFlowZipArchiveFile, bundledModel);
             ZipUtil.unpack(iFlowZipArchiveFile, sourceFolder);
         } finally {
