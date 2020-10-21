@@ -6,6 +6,33 @@ plugins {
     id 'maven-publish'
 }
 
+group = 'com.figaf'
+version = '1.5.1.RELEASE'
+
+repositories {
+    jcenter()
+    maven {
+        name = "FigafPackages"
+        url = uri("https://maven.pkg.github.com/figaf/cpi-api")
+        credentials {
+            username = "dgraversen"
+            password = "e5dd0cba370b057b688510aa1e2cf0c97b785b3c"
+        }
+    }
+    mavenLocal()
+}
+
+publishing {
+    publications {
+        pluginPublication(MavenPublication) {
+            from components.java
+            groupId project.group
+            artifactId "cpi-plugin"
+            version project.version
+        }
+    }
+}
+
 dependencies {
     compile gradleApi()
     compileOnly 'org.projectlombok:lombok:1.18.8'
@@ -26,25 +53,6 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.4'
 
     compile group: 'com.figaf.integration', name: 'cpi-api', version: '1.0-SNAPSHOT-rc001'
-}
-
-repositories {
-    jcenter()
-    mavenLocal()
-}
-
-group = 'com.figaf'
-version = '1.5.1.RELEASE'
-
-publishing {
-    publications {
-        pluginPublication(MavenPublication) {
-            from components.java
-            groupId project.group
-            artifactId "cpi-plugin"
-            version project.version
-        }
-    }
 }
 
 gradlePlugin {
