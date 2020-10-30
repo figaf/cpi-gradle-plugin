@@ -1,9 +1,9 @@
 package com.figaf.plugin.tasks;
 
 import com.figaf.integration.common.entity.CloudPlatformType;
-import com.figaf.integration.common.entity.CommonClientWrapperEntity;
 import com.figaf.integration.common.entity.ConnectionProperties;
 import com.figaf.integration.common.entity.Platform;
+import com.figaf.integration.common.entity.RequestContext;
 import com.figaf.integration.common.factory.HttpClientsFactory;
 import com.figaf.integration.cpi.client.CpiIntegrationFlowClient;
 import com.figaf.integration.cpi.client.IntegrationContentClient;
@@ -60,7 +60,7 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
 
     protected ConnectionProperties cpiConnectionProperties;
 
-    protected CommonClientWrapperEntity commonClientWrapperEntity;
+    protected RequestContext requestContext;
 
     protected String deployedBundleVersion;
 
@@ -95,11 +95,11 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
         cpiConnectionProperties = new ConnectionProperties(url, username, password);
         System.out.println("cpiConnectionProperties = " + cpiConnectionProperties);
 
-        commonClientWrapperEntity = new CommonClientWrapperEntity();
-        commonClientWrapperEntity.setCloudPlatformType(platformType);
-        commonClientWrapperEntity.setConnectionProperties(cpiConnectionProperties);
-        commonClientWrapperEntity.setPlatform(Platform.CPI);
-        commonClientWrapperEntity.setRestTemplateWrapperKey("");
+        requestContext = new RequestContext();
+        requestContext.setCloudPlatformType(platformType);
+        requestContext.setConnectionProperties(cpiConnectionProperties);
+        requestContext.setPlatform(Platform.CPI);
+        requestContext.setRestTemplateWrapperKey("");
 
         sourceFolder = new File(sourceFilePath);
 
@@ -108,7 +108,7 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
             integrationFlowTechnicalName = sourceFolder.getName();
         }
 
-        IntegrationPackage integrationPackage = getIntegrationPackageIfExists(commonClientWrapperEntity, packageTechnicalName);
+        IntegrationPackage integrationPackage = getIntegrationPackageIfExists(requestContext, packageTechnicalName);
 
         if (integrationPackage != null) {
             packageExternalId = integrationPackage.getExternalId();
@@ -118,7 +118,7 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
 
         // if packageExternalId == null then package doesn't exist and hence iFlow doesn't exist
         if (packageExternalId != null) {
-            CpiArtifact cpiIntegrationObjectData = getIFlowData(commonClientWrapperEntity, packageTechnicalName, integrationFlowTechnicalName);
+            CpiArtifact cpiIntegrationObjectData = getIFlowData(requestContext, packageTechnicalName, integrationFlowTechnicalName);
 
             if (cpiIntegrationObjectData != null) {
                 integrationFlowExternalId = cpiIntegrationObjectData.getExternalId();
@@ -146,13 +146,13 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
 
 
     private CpiArtifact getIFlowData(
-        CommonClientWrapperEntity commonClientWrapperEntity,
+        RequestContext requestContext,
         String packageTechnicalName,
         String iFlowTechnicalName
     ) {
 
         List<CpiArtifact> integrationFlowsInThePackage = cpiIntegrationFlowClient.getArtifactsByPackage(
-            commonClientWrapperEntity,
+            requestContext,
             packageTechnicalName,
             null,
             null,
@@ -172,11 +172,11 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
     }
 
     private IntegrationPackage getIntegrationPackageIfExists(
-        CommonClientWrapperEntity commonClientWrapperEntity,
+        RequestContext requestContext,
         String packageTechnicalName
     ) {
         List<IntegrationPackage> integrationPackagesSearchResult = integrationPackageClient.getIntegrationPackages(
-            commonClientWrapperEntity,
+            requestContext,
             String.format("TechnicalName eq '%s'", packageTechnicalName)
         );
 

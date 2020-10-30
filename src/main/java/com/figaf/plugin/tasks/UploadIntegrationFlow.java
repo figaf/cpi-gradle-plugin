@@ -121,7 +121,7 @@ public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
                     createIntegrationPackageRequest.setVersion("1.0.0");
                 }
 
-                packageExternalId = integrationPackageClient.createIntegrationPackage(commonClientWrapperEntity, createIntegrationPackageRequest);
+                packageExternalId = integrationPackageClient.createIntegrationPackage(requestContext, createIntegrationPackageRequest);
             }
 
             CreateOrUpdateIFlowRequest uploadIFlowRequest = new CreateOrUpdateIFlowRequest();
@@ -142,7 +142,7 @@ public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
             if (integrationFlowExternalId == null) {
                 uploadIFlowRequest.setId(integrationFlowTechnicalName);
                 cpiIntegrationFlowClient.createIntegrationFlow(
-                    commonClientWrapperEntity,
+                    requestContext,
                     packageExternalId,
                     uploadIFlowRequest,
                     bundledModel
@@ -150,7 +150,7 @@ public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
             } else {
                 uploadIFlowRequest.setId(integrationFlowExternalId);
                 cpiIntegrationFlowClient.updateArtifact(
-                    commonClientWrapperEntity,
+                    requestContext,
                     packageExternalId,
                     integrationFlowExternalId,
                     uploadIFlowRequest,
