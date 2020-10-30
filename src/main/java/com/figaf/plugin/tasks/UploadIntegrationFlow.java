@@ -1,7 +1,7 @@
 package com.figaf.plugin.tasks;
 
-import com.figaf.plugin.entities.CreateIFlowRequest;
-import com.figaf.plugin.entities.CreateIntegrationPackageRequest;
+import com.figaf.integration.cpi.entity.designtime_artifacts.CreateOrUpdateIFlowRequest;
+import com.figaf.integration.cpi.entity.designtime_artifacts.CreateOrUpdatePackageRequest;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -39,7 +39,7 @@ public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
     private static final Pattern NS_ELEMENT_WITH_PREFIX_PATTERN = Pattern.compile("/(\\w+):([\\w-_.]+)");
 
     @Input
-    private Boolean uploadDraftVersion;
+    private boolean uploadDraftVersion;
 
     public void doTaskAction() throws IOException {
         defineParameters(false);
@@ -78,7 +78,7 @@ public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
 
             if (packageExternalId == null) {
 
-                CreateIntegrationPackageRequest createIntegrationPackageRequest = new CreateIntegrationPackageRequest();
+                CreateOrUpdatePackageRequest createIntegrationPackageRequest = new CreateOrUpdatePackageRequest();
                 createIntegrationPackageRequest.setTechnicalName(packageTechnicalName);
 
                 Path packageInfoPath = Paths.get(sourceFolder.getParentFile().getAbsolutePath(), "/integration-package-info.xml");
@@ -121,14 +121,14 @@ public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
                     createIntegrationPackageRequest.setVersion("1.0.0");
                 }
 
-                packageExternalId = integrationPackageClient.createIntegrationPackage(cpiConnectionProperties, createIntegrationPackageRequest);
+                packageExternalId = integrationPackageClient.createIntegrationPackage(requestContext, createIntegrationPackageRequest);
             }
 
-            CreateIFlowRequest uploadIFlowRequest = new CreateIFlowRequest();
-            uploadIFlowRequest.setDisplayedName(integrationFlowDisplayedName);
+            CreateOrUpdateIFlowRequest uploadIFlowRequest = new CreateOrUpdateIFlowRequest();
+            uploadIFlowRequest.setName(integrationFlowDisplayedName);
             uploadIFlowRequest.setDescription(properties.getProperty("description"));
 
-            CreateIFlowRequest.AdditionalAttributes additionalAttributes = new CreateIFlowRequest.AdditionalAttributes();
+            CreateOrUpdateIFlowRequest.AdditionalAttributes additionalAttributes = new CreateOrUpdateIFlowRequest.AdditionalAttributes();
             String sourceValue = properties.getProperty("source");
             if (sourceValue != null) {
                 additionalAttributes.getSource().add(sourceValue);
@@ -141,16 +141,16 @@ public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
 
             if (integrationFlowExternalId == null) {
                 uploadIFlowRequest.setId(integrationFlowTechnicalName);
-                integrationFlowClient.createIntegrationFlow(
-                    cpiConnectionProperties,
+                cpiIntegrationFlowClient.createIntegrationFlow(
+                    requestContext,
                     packageExternalId,
                     uploadIFlowRequest,
                     bundledModel
                 );
             } else {
                 uploadIFlowRequest.setId(integrationFlowExternalId);
-                integrationFlowClient.updateIntegrationFlow(
-                    cpiConnectionProperties,
+                cpiIntegrationFlowClient.updateArtifact(
+                    requestContext,
                     packageExternalId,
                     integrationFlowExternalId,
                     uploadIFlowRequest,

@@ -1,6 +1,6 @@
 package com.figaf.plugin;
 
-import com.figaf.plugin.entities.CpiPlatformType;
+import com.figaf.integration.common.entity.CloudPlatformType;
 import com.figaf.plugin.tasks.AbstractIntegrationFlowTask;
 import com.figaf.plugin.tasks.DeployIntegrationFlow;
 import com.figaf.plugin.tasks.DownloadIntegrationFlow;
@@ -24,7 +24,7 @@ public class CpiPlugin implements Plugin<Project> {
 
         project.getTasks().register("uploadIntegrationFlow", UploadIntegrationFlow.class, uploadIntegrationFlow -> {
             applyExtension(uploadIntegrationFlow, extension, "Builds bundled model of IFlow and uploads it to CPI.");
-            uploadIntegrationFlow.setUploadDraftVersion(extension.getUploadDraftVersion().getOrNull());
+            uploadIntegrationFlow.setUploadDraftVersion(extension.getUploadDraftVersion().getOrElse(false));
         });
 
         project.getTasks().register("deployIntegrationFlow", DeployIntegrationFlow.class, deployIntegrationFlow -> {
@@ -46,9 +46,9 @@ public class CpiPlugin implements Plugin<Project> {
             abstractIntegrationFlowTask.setPassword(extension.getPassword().getOrNull());
             String cpiPlatformTypeString = extension.getPlatformType().getOrNull();
             if (cpiPlatformTypeString != null) {
-                abstractIntegrationFlowTask.setPlatformType(CpiPlatformType.valueOf(cpiPlatformTypeString));
+                abstractIntegrationFlowTask.setPlatformType(CloudPlatformType.valueOf(cpiPlatformTypeString));
             } else {
-                abstractIntegrationFlowTask.setPlatformType(CpiPlatformType.NEO);
+                abstractIntegrationFlowTask.setPlatformType(CloudPlatformType.NEO);
             }
             abstractIntegrationFlowTask.setSourceFilePath(extension.getSourceFilePath().getOrNull());
             abstractIntegrationFlowTask.setPackageTechnicalName(extension.getPackageTechnicalName().getOrNull());
