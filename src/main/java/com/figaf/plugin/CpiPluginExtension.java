@@ -27,15 +27,17 @@ public class CpiPluginExtension {
 
     private final Property<String> packageExternalId;
 
-    private final Property<String> integrationFlowTechnicalName;
+    private final Property<String> artifactTechnicalName;
 
-    private final Property<String> integrationFlowExternalId;
+    private final Property<String> artifactExternalId;
 
     private final Property<Boolean> waitForStartup;
 
     private final SetProperty<String> ignoreFilesList;
 
     private final Property<Boolean> uploadDraftVersion;
+
+    private final Property<String> artifactType;
 
     public CpiPluginExtension(Project project) {
         this.url = project.getObjects().property(String.class);
@@ -45,10 +47,11 @@ public class CpiPluginExtension {
         this.sourceFilePath = project.getObjects().property(String.class);
         this.packageTechnicalName = project.getObjects().property(String.class);
         this.packageExternalId = project.getObjects().property(String.class);
-        this.integrationFlowTechnicalName = project.getObjects().property(String.class);
-        this.integrationFlowExternalId = project.getObjects().property(String.class);
+        this.artifactTechnicalName = project.getObjects().property(String.class);
+        this.artifactExternalId = project.getObjects().property(String.class);
         this.waitForStartup = project.getObjects().property(Boolean.class);
         this.ignoreFilesList = project.getObjects().setProperty(String.class);
         this.uploadDraftVersion = project.getObjects().property(Boolean.class);
+        this.artifactType = project.getObjects().property(String.class);
     }
 }

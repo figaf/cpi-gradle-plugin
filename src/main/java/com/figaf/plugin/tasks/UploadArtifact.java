@@ -1,7 +1,9 @@
 package com.figaf.plugin.tasks;
 
+import com.figaf.integration.cpi.entity.designtime_artifacts.CreateOrUpdateCpiArtifactRequest;
 import com.figaf.integration.cpi.entity.designtime_artifacts.CreateOrUpdateIFlowRequest;
 import com.figaf.integration.cpi.entity.designtime_artifacts.CreateOrUpdatePackageRequest;
+import com.figaf.integration.cpi.entity.designtime_artifacts.CreateOrUpdateValueMappingRequest;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -33,7 +35,7 @@ import java.util.regex.Pattern;
  */
 @Slf4j
 @Setter
-public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
+public class UploadArtifact extends AbstractArtifactTask {
 
     private static final Pattern NS_ELEMENT_WITHOUT_PREFIX_PATTERN = Pattern.compile("(?<!./)/([\\w-_.]+)(?!\\w*:)");
     private static final Pattern NS_ELEMENT_WITH_PREFIX_PATTERN = Pattern.compile("/(\\w+):([\\w-_.]+)");
@@ -42,8 +44,29 @@ public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
     private boolean uploadDraftVersion;
 
     public void doTaskAction() throws IOException {
+        System.out.println("uploadArtifact");
         defineParameters(false);
-        Path pathToDirectoryWithExcludedFiles = Files.createTempDirectory("cpi-plugin-upload-iflow-" + UUID.randomUUID().toString());
+
+        Path pathToDirectoryWithExcludedFiles = null;
+        CreateOrUpdateCpiArtifactRequest uploadArtifactRequest = null;
+
+        switch (artifactType) {
+            case CPI_IFLOW: {
+                pathToDirectoryWithExcludedFiles = Files.createTempDirectory(
+                    "cpi-plugin-upload-iflow-" + UUID.randomUUID().toString()
+                );
+                uploadArtifactRequest = new CreateOrUpdateIFlowRequest();
+                break;
+            }
+            case VALUE_MAPPING: {
+                pathToDirectoryWithExcludedFiles = Files.createTempDirectory(
+                    "cpi-plugin-upload-vm-" + UUID.randomUUID().toString()
+                );
+                uploadArtifactRequest = new CreateOrUpdateValueMappingRequest();
+                break;
+            }
+        }
+
         File directoryWithExcludedFiles = pathToDirectoryWithExcludedFiles.toFile();
         try {
             List<Path> pathsToExclude = new ArrayList<>();
@@ -63,10 +86,10 @@ public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
             });
 
             Manifest manifest = parseManifestFile(directoryWithExcludedFiles);
-            String integrationFlowDisplayedName = manifest.getMainAttributes().getValue("Bundle-Name");
-            if (integrationFlowDisplayedName == null) {
-                log.error("integrationFlowDisplayedName is null, integrationFlowTechnicalName will be used instead");
-                integrationFlowDisplayedName = integrationFlowTechnicalName;
+            String artifactDisplayedName = manifest.getMainAttributes().getValue("Bundle-Name");
+            if (artifactDisplayedName == null) {
+                log.error("artifactDisplayedName is null, artifactTechnicalName will be used instead");
+                artifactDisplayedName = artifactTechnicalName;
             }
 
             Properties properties = getMetainfoProperties(directoryWithExcludedFiles);
@@ -124,11 +147,10 @@ public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
                 packageExternalId = integrationPackageClient.createIntegrationPackage(requestContext, createIntegrationPackageRequest);
             }
 
-            CreateOrUpdateIFlowRequest uploadIFlowRequest = new CreateOrUpdateIFlowRequest();
-            uploadIFlowRequest.setName(integrationFlowDisplayedName);
-            uploadIFlowRequest.setDescription(properties.getProperty("description"));
+            uploadArtifactRequest.setName(artifactDisplayedName);
+            uploadArtifactRequest.setDescription(properties.getProperty("description"));
 
-            CreateOrUpdateIFlowRequest.AdditionalAttributes additionalAttributes = new CreateOrUpdateIFlowRequest.AdditionalAttributes();
+            CreateOrUpdateCpiArtifactRequest.AdditionalAttributes additionalAttributes = new CreateOrUpdateCpiArtifactRequest.AdditionalAttributes();
             String sourceValue = properties.getProperty("source");
             if (sourceValue != null) {
                 additionalAttributes.getSource().add(sourceValue);
@@ -137,23 +159,34 @@ public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
             if (targetValue != null) {
                 additionalAttributes.getTarget().add(targetValue);
             }
-            uploadIFlowRequest.setAdditionalAttrs(additionalAttributes);
+            uploadArtifactRequest.setAdditionalAttrs(additionalAttributes);
 
-            if (integrationFlowExternalId == null) {
-                uploadIFlowRequest.setId(integrationFlowTechnicalName);
-                cpiIntegrationFlowClient.createIntegrationFlow(
-                    requestContext,
-                    packageExternalId,
-                    uploadIFlowRequest,
-                    bundledModel
-                );
+            if (artifactExternalId == null) {
+                uploadArtifactRequest.setId(artifactTechnicalName);
+
+                if (uploadArtifactRequest instanceof CreateOrUpdateIFlowRequest) {
+                    cpiIntegrationFlowClient.createIntegrationFlow(
+                        requestContext,
+                        packageExternalId,
+                        (CreateOrUpdateIFlowRequest)uploadArtifactRequest,
+                        bundledModel
+                    );
+                } else {
+                    cpiIntegrationFlowClient.createValueMapping(
+                        requestContext,
+                        packageExternalId,
+                        (CreateOrUpdateValueMappingRequest) uploadArtifactRequest,
+                        bundledModel
+                    );
+                }
+
             } else {
-                uploadIFlowRequest.setId(integrationFlowExternalId);
+                uploadArtifactRequest.setId(artifactExternalId);
                 cpiIntegrationFlowClient.updateArtifact(
                     requestContext,
                     packageExternalId,
-                    integrationFlowExternalId,
-                    uploadIFlowRequest,
+                    artifactExternalId,
+                    uploadArtifactRequest,
                     bundledModel,
                     uploadDraftVersion,
                     manifest.getMainAttributes().getValue("Bundle-Version")
@@ -210,7 +243,7 @@ public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
         return document;
     }
 
-    public <T> List<T> selectNodes(Document document, String xPathString) {
+    private  <T> List<T> selectNodes(Document document, String xPathString) {
         if (!isXPathString(xPathString)) {
             return new ArrayList<>();
         } else {
@@ -230,7 +263,7 @@ public class UploadIntegrationFlow extends AbstractIntegrationFlowTask {
         }
     }
 
-    public boolean isXPathString(String xPathString) {
+    private boolean isXPathString(String xPathString) {
         try {
             Dom4jXPath xPath = new Dom4jXPath(xPathString);
             return xPathString.contains("/");
