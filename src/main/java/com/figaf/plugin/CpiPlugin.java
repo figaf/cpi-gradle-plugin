@@ -1,10 +1,8 @@
 package com.figaf.plugin;
 
 import com.figaf.integration.common.entity.CloudPlatformType;
-import com.figaf.plugin.tasks.AbstractIntegrationFlowTask;
-import com.figaf.plugin.tasks.DeployIntegrationFlow;
-import com.figaf.plugin.tasks.DownloadIntegrationFlow;
-import com.figaf.plugin.tasks.UploadIntegrationFlow;
+import com.figaf.plugin.enumaration.ArtifactType;
+import com.figaf.plugin.tasks.*;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.provider.SetProperty;
@@ -22,22 +20,21 @@ public class CpiPlugin implements Plugin<Project> {
 
         CpiPluginExtension extension = project.getExtensions().create("cpiPlugin", CpiPluginExtension.class, project);
 
-        project.getTasks().register("uploadIntegrationFlow", UploadIntegrationFlow.class, uploadIntegrationFlow -> {
-            applyExtension(uploadIntegrationFlow, extension, "Builds bundled model of IFlow and uploads it to CPI.");
-            uploadIntegrationFlow.setUploadDraftVersion(extension.getUploadDraftVersion().getOrElse(false));
+        project.getTasks().register("uploadArtifact", UploadArtifact.class, uploadArtifact -> {
+            applyExtension(uploadArtifact, extension, "Builds bundled model of artifact and uploads it to CPI.");
+            uploadArtifact.setUploadDraftVersion(extension.getUploadDraftVersion().getOrElse(false));
         });
 
-        project.getTasks().register("deployIntegrationFlow", DeployIntegrationFlow.class, deployIntegrationFlow -> {
-            applyExtension(deployIntegrationFlow, extension, "Deploys IFlow on CPI. Usually it makes sense to run this task after 'uploadIntegrationFlow'.");
-            deployIntegrationFlow.setWaitForStartup(extension.getWaitForStartup().getOrNull());
+        project.getTasks().register("deployArtifact", DeployArtifact.class, deployArtifact -> {
+            applyExtension(deployArtifact, extension, "Deploys artifact on CPI. Usually it makes sense to run this task after 'uploadArtifact'.");
+            deployArtifact.setWaitForStartup(extension.getWaitForStartup().getOrNull());
         });
 
-        project.getTasks().register("downloadIntegrationFlow", DownloadIntegrationFlow.class, downloadIntegrationFlow ->
-            applyExtension(downloadIntegrationFlow, extension, "Downloads IFlow bundled model from CPI and unpacks it to module folder."));
-
+        project.getTasks().register("downloadArtifact", DownloadArtifact.class, downloadArtifact ->
+            applyExtension(downloadArtifact, extension, "Downloads artifact bundled model from CPI and unpacks it to module folder."));
     }
 
-    private void applyExtension(AbstractIntegrationFlowTask abstractIntegrationFlowTask, CpiPluginExtension extension, String taskDescription) {
+    private void applyExtension(AbstractArtifactTask abstractIntegrationFlowTask, CpiPluginExtension extension, String taskDescription) {
         try {
             abstractIntegrationFlowTask.setGroup("cpi-plugin");
             abstractIntegrationFlowTask.setDescription(taskDescription);
@@ -53,14 +50,15 @@ public class CpiPlugin implements Plugin<Project> {
             abstractIntegrationFlowTask.setSourceFilePath(extension.getSourceFilePath().getOrNull());
             abstractIntegrationFlowTask.setPackageTechnicalName(extension.getPackageTechnicalName().getOrNull());
             abstractIntegrationFlowTask.setPackageExternalId(extension.getPackageExternalId().getOrNull());
-            abstractIntegrationFlowTask.setIntegrationFlowTechnicalName(extension.getIntegrationFlowTechnicalName().getOrNull());
-            abstractIntegrationFlowTask.setIntegrationFlowExternalId(extension.getIntegrationFlowExternalId().getOrNull());
+            abstractIntegrationFlowTask.setArtifactTechnicalName(extension.getArtifactTechnicalName().getOrNull());
+            abstractIntegrationFlowTask.setArtifactExternalId(extension.getArtifactExternalId().getOrNull());
             SetProperty<String> ignoreFilesListProperty = extension.getIgnoreFilesList();
             Set<String> ignoreFilesList = new HashSet<>();
             if (ignoreFilesListProperty != null && ignoreFilesListProperty.isPresent()) {
                 ignoreFilesList.addAll(ignoreFilesListProperty.get());
             }
             abstractIntegrationFlowTask.setIgnoreFilesList(ignoreFilesList);
+            abstractIntegrationFlowTask.setArtifactType(ArtifactType.valueOf(extension.getArtifactType().getOrNull()));
         } catch (Exception ex) {
             ex.printStackTrace();
             throw ex;

@@ -10,7 +10,7 @@ import org.gradle.api.tasks.Input;
  * @author Arsenii Istlentev
  */
 @Setter
-public class DeployIntegrationFlow extends AbstractIntegrationFlowTask {
+public class DeployArtifact extends AbstractArtifactTask {
 
     private static final int MAX_NUMBER_OF_ATTEMPTS = 36;
     private static final long SLEEP_TIME = 5000L;
@@ -19,9 +19,21 @@ public class DeployIntegrationFlow extends AbstractIntegrationFlowTask {
     private Boolean waitForStartup = false;
 
     public void doTaskAction() throws Exception {
-        System.out.println("deployIntegrationFlow");
+        System.out.println("deployArtifact");
         defineParameters(true);
-        String taskId = cpiIntegrationFlowClient.deployIFlow(requestContext, packageExternalId, integrationFlowExternalId, integrationFlowTechnicalName);
+        String taskId = null;
+
+        switch (artifactType) {
+            case CPI_IFLOW: {
+                taskId = cpiIntegrationFlowClient.deployIFlow(requestContext, packageExternalId, artifactExternalId, artifactTechnicalName);
+                break;
+            }
+            case VALUE_MAPPING: {
+                taskId = cpiIntegrationFlowClient.deployValueMapping(requestContext, packageExternalId, artifactExternalId);
+                break;
+            }
+        }
+
         if (waitForStartup == null || !waitForStartup) {
             return;
         }
@@ -36,12 +48,12 @@ public class DeployIntegrationFlow extends AbstractIntegrationFlowTask {
                 numberOfAttempts++;
                 Thread.sleep(SLEEP_TIME);
             } else {
-                throw new RuntimeException(String.format("Deployment of IFlow %s has failed", integrationFlowTechnicalName));
+                throw new RuntimeException(String.format("Deployment of %s has failed", artifactTechnicalName));
             }
         }
         boolean started = false;
         while (!started && numberOfAttempts <= MAX_NUMBER_OF_ATTEMPTS) {
-            IntegrationContent integrationContent = integrationContentClient.getIntegrationRuntimeArtifactByName(requestContext, integrationFlowTechnicalName);
+            IntegrationContent integrationContent = integrationContentClient.getIntegrationRuntimeArtifactByName(requestContext, artifactTechnicalName);
             String integrationRuntimeArtifactStatus = integrationContent.getStatus();
             System.out.println("integrationRuntimeArtifactStatus = " + integrationRuntimeArtifactStatus);
             if ("ERROR".equals(integrationRuntimeArtifactStatus)) {
@@ -52,9 +64,9 @@ public class DeployIntegrationFlow extends AbstractIntegrationFlowTask {
                     ex.printStackTrace();
                 }
                 if (integrationContentErrorInformation != null && StringUtils.isNotEmpty(integrationContentErrorInformation.getErrorMessage())) {
-                    throw new RuntimeException(String.format("Deployment of IFlow %s has failed. Error messages: %s", integrationFlowTechnicalName, integrationContentErrorInformation.getErrorMessage()));
+                    throw new RuntimeException(String.format("Deployment of %s has failed. Error messages: %s", artifactTechnicalName, integrationContentErrorInformation.getErrorMessage()));
                 } else {
-                    throw new RuntimeException(String.format("Deployment of IFlow %s has failed", integrationFlowTechnicalName));
+                    throw new RuntimeException(String.format("Deployment of %s has failed", artifactTechnicalName));
                 }
             } else if (!"STARTED".equals(integrationRuntimeArtifactStatus)) {
                 numberOfAttempts++;
@@ -64,7 +76,7 @@ public class DeployIntegrationFlow extends AbstractIntegrationFlowTask {
             }
         }
         if (!started) {
-            throw new RuntimeException(String.format("Deployment of IFlow %s hasn't been started successfully within %d ms", integrationFlowTechnicalName, MAX_NUMBER_OF_ATTEMPTS * SLEEP_TIME));
+            throw new RuntimeException(String.format("Deployment of %s hasn't been started successfully within %d ms", artifactTechnicalName, MAX_NUMBER_OF_ATTEMPTS * SLEEP_TIME));
         }
     }
 }

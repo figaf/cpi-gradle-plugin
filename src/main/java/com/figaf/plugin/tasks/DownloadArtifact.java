@@ -18,14 +18,14 @@ import java.util.stream.Collectors;
  * @author Arsenii Istlentev
  */
 @Setter
-public class DownloadIntegrationFlow extends AbstractIntegrationFlowTask {
+public class DownloadArtifact extends AbstractArtifactTask {
 
     public void doTaskAction() throws IOException {
-        System.out.println("downloadIntegrationFlow");
+        System.out.println("downloadArtifact");
         defineParameters(true);
 
-        Path pathToIFlowZipArchive = Files.createTempFile(integrationFlowTechnicalName, ".zip");
-        File iFlowZipArchiveFile = pathToIFlowZipArchive.toFile();
+        Path pathToArtifactZipArchive = Files.createTempFile(String.format("%s_%s", artifactType, artifactTechnicalName), ".zip");
+        File artifactZipArchiveFile = pathToArtifactZipArchive.toFile();
         try {
             List<Path> pathsToInclude = new ArrayList<>();
             for (String fileNameToExclude : ignoreFilesList) {
@@ -52,11 +52,11 @@ public class DownloadIntegrationFlow extends AbstractIntegrationFlowTask {
                 }
             }
 
-            byte[] bundledModel = cpiIntegrationFlowClient.downloadArtifact(requestContext, packageExternalId, integrationFlowExternalId);
-            FileUtils.writeByteArrayToFile(iFlowZipArchiveFile, bundledModel);
-            ZipUtil.unpack(iFlowZipArchiveFile, sourceFolder);
+            byte[] bundledModel = cpiIntegrationFlowClient.downloadArtifact(requestContext, packageExternalId, artifactExternalId);
+            FileUtils.writeByteArrayToFile(artifactZipArchiveFile, bundledModel);
+            ZipUtil.unpack(artifactZipArchiveFile, sourceFolder);
         } finally {
-            Files.deleteIfExists(pathToIFlowZipArchive);
+            Files.deleteIfExists(pathToArtifactZipArchive);
         }
     }
 }
