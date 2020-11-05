@@ -10,7 +10,7 @@ import com.figaf.integration.cpi.client.IntegrationContentClient;
 import com.figaf.integration.cpi.client.IntegrationPackageClient;
 import com.figaf.integration.cpi.entity.designtime_artifacts.CpiArtifact;
 import com.figaf.integration.cpi.entity.designtime_artifacts.IntegrationPackage;
-import com.figaf.plugin.enumaration.ArtifactType;
+import com.figaf.plugin.enumeration.ArtifactType;
 import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gradle.api.DefaultTask;

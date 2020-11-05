@@ -1,7 +1,7 @@
 package com.figaf.plugin;
 
 import com.figaf.integration.common.entity.CloudPlatformType;
-import com.figaf.plugin.enumaration.ArtifactType;
+import com.figaf.plugin.enumeration.ArtifactType;
 import com.figaf.plugin.tasks.*;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
