@@ -54,7 +54,7 @@ to fetch and automatically unpack bundled IFlow. Just create a high-level folder
 build.gradle
 ```
 plugins {
-    id 'com.figaf.cpi-plugin' version '1.0.RELEASE' apply false
+    id 'com.figaf.cpi-plugin' version '1.6.RELEASE' apply false
 }
 
 subprojects { sub->

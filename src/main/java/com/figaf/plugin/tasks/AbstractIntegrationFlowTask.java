@@ -1,12 +1,15 @@
 package com.figaf.plugin.tasks;
 
-import com.figaf.plugin.client.IntegrationFlowClient;
-import com.figaf.plugin.client.IntegrationPackageClient;
-import com.figaf.plugin.client.IntegrationRuntimeClient;
-import com.figaf.plugin.entities.CpiConnectionProperties;
-import com.figaf.plugin.entities.CpiIntegrationObjectData;
-import com.figaf.plugin.entities.CpiPlatformType;
-import com.figaf.plugin.entities.IntegrationPackage;
+import com.figaf.integration.common.entity.CloudPlatformType;
+import com.figaf.integration.common.entity.ConnectionProperties;
+import com.figaf.integration.common.entity.Platform;
+import com.figaf.integration.common.entity.RequestContext;
+import com.figaf.integration.common.factory.HttpClientsFactory;
+import com.figaf.integration.cpi.client.CpiIntegrationFlowClient;
+import com.figaf.integration.cpi.client.IntegrationContentClient;
+import com.figaf.integration.cpi.client.IntegrationPackageClient;
+import com.figaf.integration.cpi.entity.designtime_artifacts.CpiArtifact;
+import com.figaf.integration.cpi.entity.designtime_artifacts.IntegrationPackage;
 import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gradle.api.DefaultTask;
@@ -14,7 +17,9 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -22,6 +27,8 @@ import java.util.Set;
  */
 @Setter
 public abstract class AbstractIntegrationFlowTask extends DefaultTask {
+
+    private final static String SSO_URL = "https://accounts.sap.com/saml2/idp/sso";
 
     @Input
     protected String url;
@@ -33,7 +40,7 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
     protected String password;
 
     @Input
-    protected CpiPlatformType platformType;
+    protected CloudPlatformType platformType;
 
     @Input
     protected String sourceFilePath;
@@ -51,15 +58,26 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
 
     protected String packageExternalId;
 
-    protected CpiConnectionProperties cpiConnectionProperties;
+    protected ConnectionProperties cpiConnectionProperties;
+
+    protected RequestContext requestContext;
 
     protected String deployedBundleVersion;
 
     protected File sourceFolder;
 
-    protected final IntegrationPackageClient integrationPackageClient = new IntegrationPackageClient();
-    protected final IntegrationFlowClient integrationFlowClient = new IntegrationFlowClient();
-    protected final IntegrationRuntimeClient integrationRuntimeClient = new IntegrationRuntimeClient();
+    protected IntegrationPackageClient integrationPackageClient;
+
+    protected CpiIntegrationFlowClient cpiIntegrationFlowClient;
+
+    protected IntegrationContentClient integrationContentClient;
+
+    public AbstractIntegrationFlowTask() {
+        HttpClientsFactory httpClientsFactory = new HttpClientsFactory();
+        this.integrationPackageClient = new IntegrationPackageClient(SSO_URL);
+        this.cpiIntegrationFlowClient = new CpiIntegrationFlowClient(SSO_URL, integrationPackageClient);
+        this.integrationContentClient = new IntegrationContentClient(SSO_URL, httpClientsFactory);
+    }
 
     @TaskAction
     public void taskAction() {
@@ -74,8 +92,15 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
     protected abstract void doTaskAction() throws Exception;
 
     protected void defineParameters(boolean checkObjectsExistence) {
-        cpiConnectionProperties = new CpiConnectionProperties(url, username, password, platformType);
+        cpiConnectionProperties = new ConnectionProperties(url, username, password);
         System.out.println("cpiConnectionProperties = " + cpiConnectionProperties);
+
+        requestContext = new RequestContext();
+        requestContext.setCloudPlatformType(platformType);
+        requestContext.setConnectionProperties(cpiConnectionProperties);
+        requestContext.setPlatform(Platform.CPI);
+        requestContext.setRestTemplateWrapperKey("");
+
         sourceFolder = new File(sourceFilePath);
 
         if (packageTechnicalName == null && integrationFlowTechnicalName == null) {
@@ -83,7 +108,7 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
             integrationFlowTechnicalName = sourceFolder.getName();
         }
 
-        IntegrationPackage integrationPackage = integrationPackageClient.getIntegrationPackageIfExists(cpiConnectionProperties, packageTechnicalName);
+        IntegrationPackage integrationPackage = getIntegrationPackageIfExists(requestContext, packageTechnicalName);
 
         if (integrationPackage != null) {
             packageExternalId = integrationPackage.getExternalId();
@@ -93,7 +118,7 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
 
         // if packageExternalId == null then package doesn't exist and hence iFlow doesn't exist
         if (packageExternalId != null) {
-            CpiIntegrationObjectData cpiIntegrationObjectData = integrationFlowClient.getIFlowData(cpiConnectionProperties, packageTechnicalName, integrationFlowTechnicalName);
+            CpiArtifact cpiIntegrationObjectData = getIFlowData(requestContext, packageTechnicalName, integrationFlowTechnicalName);
 
             if (cpiIntegrationObjectData != null) {
                 integrationFlowExternalId = cpiIntegrationObjectData.getExternalId();
@@ -118,4 +143,56 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
         System.out.println("deployedBundleVersion = " + deployedBundleVersion);
         System.out.println("ignoreFilesList = " + ignoreFilesList);
     }
+
+
+    private CpiArtifact getIFlowData(
+        RequestContext requestContext,
+        String packageTechnicalName,
+        String iFlowTechnicalName
+    ) {
+
+        List<CpiArtifact> integrationFlowsInThePackage = cpiIntegrationFlowClient.getArtifactsByPackage(
+            requestContext,
+            packageTechnicalName,
+            null,
+            null,
+            Collections.singleton("CPI_IFLOW")
+        );
+
+        CpiArtifact iFlowCpiIntegrationObjectData = null;
+
+        for (CpiArtifact iFlow : integrationFlowsInThePackage) {
+            if (iFlow.getTechnicalName().equals(iFlowTechnicalName)) {
+                iFlowCpiIntegrationObjectData = iFlow;
+                break;
+            }
+        }
+
+        return iFlowCpiIntegrationObjectData;
+    }
+
+    private IntegrationPackage getIntegrationPackageIfExists(
+        RequestContext requestContext,
+        String packageTechnicalName
+    ) {
+        List<IntegrationPackage> integrationPackagesSearchResult = integrationPackageClient.getIntegrationPackages(
+            requestContext,
+            String.format("TechnicalName eq '%s'", packageTechnicalName)
+        );
+
+        if (integrationPackagesSearchResult.size() == 1) {
+            return integrationPackagesSearchResult.get(0);
+        } else if (integrationPackagesSearchResult.size() > 1) {
+            throw new RuntimeException(
+                String.format(
+                    "Unexpected state: %d integration packages were found by name %s.",
+                    integrationPackagesSearchResult.size(),
+                    packageTechnicalName
+                )
+            );
+        } else {
+            return null;
+        }
+    }
+
 }
