@@ -10,6 +10,7 @@ import com.figaf.integration.cpi.client.IntegrationContentClient;
 import com.figaf.integration.cpi.client.IntegrationPackageClient;
 import com.figaf.integration.cpi.entity.designtime_artifacts.CpiArtifact;
 import com.figaf.integration.cpi.entity.designtime_artifacts.IntegrationPackage;
+import com.figaf.plugin.enumeration.ArtifactType;
 import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gradle.api.DefaultTask;
@@ -26,7 +27,7 @@ import java.util.Set;
  * @author Arsenii Istlentev
  */
 @Setter
-public abstract class AbstractIntegrationFlowTask extends DefaultTask {
+public abstract class AbstractArtifactTask extends DefaultTask {
 
     private final static String SSO_URL = "https://accounts.sap.com/saml2/idp/sso";
 
@@ -49,12 +50,15 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
     protected String packageTechnicalName;
 
     @Input
-    protected String integrationFlowTechnicalName;
+    protected String artifactTechnicalName;
 
     @Input
     protected Set<String> ignoreFilesList;
 
-    protected String integrationFlowExternalId;
+    @Input
+    protected ArtifactType artifactType;
+
+    protected String artifactExternalId;
 
     protected String packageExternalId;
 
@@ -72,7 +76,7 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
 
     protected IntegrationContentClient integrationContentClient;
 
-    public AbstractIntegrationFlowTask() {
+    public AbstractArtifactTask() {
         HttpClientsFactory httpClientsFactory = new HttpClientsFactory();
         this.integrationPackageClient = new IntegrationPackageClient(SSO_URL);
         this.cpiIntegrationFlowClient = new CpiIntegrationFlowClient(SSO_URL, integrationPackageClient);
@@ -103,9 +107,9 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
 
         sourceFolder = new File(sourceFilePath);
 
-        if (packageTechnicalName == null && integrationFlowTechnicalName == null) {
+        if (packageTechnicalName == null && artifactTechnicalName == null) {
             packageTechnicalName = sourceFolder.getParentFile().getName();
-            integrationFlowTechnicalName = sourceFolder.getName();
+            artifactTechnicalName = sourceFolder.getName();
         }
 
         IntegrationPackage integrationPackage = getIntegrationPackageIfExists(requestContext, packageTechnicalName);
@@ -116,15 +120,20 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
             throw new RuntimeException(String.format("Cannot find package with name %s", packageTechnicalName));
         }
 
-        // if packageExternalId == null then package doesn't exist and hence iFlow doesn't exist
+        // if packageExternalId == null then package doesn't exist and hence iFlow/Value Mapping doesn't exist
         if (packageExternalId != null) {
-            CpiArtifact cpiIntegrationObjectData = getIFlowData(requestContext, packageTechnicalName, integrationFlowTechnicalName);
+            CpiArtifact cpiIntegrationObjectData = getArtifactData(
+                requestContext,
+                packageTechnicalName,
+                artifactTechnicalName,
+                this.artifactType.toString()
+            );
 
             if (cpiIntegrationObjectData != null) {
-                integrationFlowExternalId = cpiIntegrationObjectData.getExternalId();
+                artifactExternalId = cpiIntegrationObjectData.getExternalId();
                 deployedBundleVersion = cpiIntegrationObjectData.getVersion();
             } else if (checkObjectsExistence) {
-                throw new RuntimeException(String.format("Cannot find iflow with name %s in package %s", integrationFlowTechnicalName, packageTechnicalName));
+                throw new RuntimeException(String.format("Cannot find artifact with name %s in package %s", artifactTechnicalName, packageTechnicalName));
             }
         }
 
@@ -138,37 +147,38 @@ public abstract class AbstractIntegrationFlowTask extends DefaultTask {
 
         System.out.println("packageTechnicalName = " + packageTechnicalName);
         System.out.println("packageExternalId = " + packageExternalId);
-        System.out.println("integrationFlowTechnicalName = " + integrationFlowTechnicalName);
-        System.out.println("integrationFlowExternalId = " + integrationFlowExternalId);
+        System.out.println("artifactTechnicalName = " + artifactTechnicalName);
+        System.out.println("artifactExternalId = " + artifactExternalId);
         System.out.println("deployedBundleVersion = " + deployedBundleVersion);
         System.out.println("ignoreFilesList = " + ignoreFilesList);
     }
 
 
-    private CpiArtifact getIFlowData(
+    private CpiArtifact getArtifactData(
         RequestContext requestContext,
         String packageTechnicalName,
-        String iFlowTechnicalName
+        String artifactTechnicalName,
+        String artifactType
     ) {
 
-        List<CpiArtifact> integrationFlowsInThePackage = cpiIntegrationFlowClient.getArtifactsByPackage(
+        List<CpiArtifact> artifactsInThePackage = cpiIntegrationFlowClient.getArtifactsByPackage(
             requestContext,
             packageTechnicalName,
             null,
             null,
-            Collections.singleton("CPI_IFLOW")
+            Collections.singleton(artifactType)
         );
 
-        CpiArtifact iFlowCpiIntegrationObjectData = null;
+        CpiArtifact artifactCpiIntegrationObjectData = null;
 
-        for (CpiArtifact iFlow : integrationFlowsInThePackage) {
-            if (iFlow.getTechnicalName().equals(iFlowTechnicalName)) {
-                iFlowCpiIntegrationObjectData = iFlow;
+        for (CpiArtifact artifact : artifactsInThePackage) {
+            if (artifact.getTechnicalName().equals(artifactTechnicalName)) {
+                artifactCpiIntegrationObjectData = artifact;
                 break;
             }
         }
 
-        return iFlowCpiIntegrationObjectData;
+        return artifactCpiIntegrationObjectData;
     }
 
     private IntegrationPackage getIntegrationPackageIfExists(
