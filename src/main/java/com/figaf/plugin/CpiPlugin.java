@@ -1,6 +1,7 @@
 package com.figaf.plugin;
 
 import com.figaf.integration.common.entity.CloudPlatformType;
+import com.figaf.integration.common.factory.HttpClientsFactory;
 import com.figaf.plugin.enumeration.ArtifactType;
 import com.figaf.plugin.tasks.*;
 import org.gradle.api.Plugin;
@@ -59,6 +60,7 @@ public class CpiPlugin implements Plugin<Project> {
             }
             abstractIntegrationFlowTask.setIgnoreFilesList(ignoreFilesList);
             abstractIntegrationFlowTask.setArtifactType(ArtifactType.valueOf(extension.getArtifactType().getOrNull()));
+            abstractIntegrationFlowTask.setHttpClientsFactory(extension.getHttpClientsFactory().getOrElse(new HttpClientsFactory()));
         } catch (Exception ex) {
             ex.printStackTrace();
             throw ex;

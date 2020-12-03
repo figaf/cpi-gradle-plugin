@@ -1,5 +1,6 @@
 package com.figaf.plugin;
 
+import com.figaf.integration.common.factory.HttpClientsFactory;
 import lombok.Getter;
 import lombok.ToString;
 import org.gradle.api.Project;
@@ -39,6 +40,8 @@ public class CpiPluginExtension {
 
     private final Property<String> artifactType;
 
+    private final Property<HttpClientsFactory> httpClientsFactory;
+
     public CpiPluginExtension(Project project) {
         this.url = project.getObjects().property(String.class);
         this.username = project.getObjects().property(String.class);
@@ -53,5 +56,6 @@ public class CpiPluginExtension {
         this.ignoreFilesList = project.getObjects().setProperty(String.class);
         this.uploadDraftVersion = project.getObjects().property(Boolean.class);
         this.artifactType = project.getObjects().property(String.class);
+        this.httpClientsFactory = project.getObjects().property(HttpClientsFactory.class);
     }
 }
