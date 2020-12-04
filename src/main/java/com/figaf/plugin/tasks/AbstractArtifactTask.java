@@ -78,8 +78,8 @@ public abstract class AbstractArtifactTask extends DefaultTask {
 
     public AbstractArtifactTask() {
         HttpClientsFactory httpClientsFactory = new HttpClientsFactory();
-        this.integrationPackageClient = new IntegrationPackageClient(SSO_URL);
-        this.cpiIntegrationFlowClient = new CpiIntegrationFlowClient(SSO_URL, integrationPackageClient);
+        this.integrationPackageClient = new IntegrationPackageClient(SSO_URL, httpClientsFactory);
+        this.cpiIntegrationFlowClient = new CpiIntegrationFlowClient(SSO_URL, integrationPackageClient, httpClientsFactory);
         this.integrationContentClient = new IntegrationContentClient(SSO_URL, httpClientsFactory);
     }
 
