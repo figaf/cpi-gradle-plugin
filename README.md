@@ -174,3 +174,5 @@ Default value: `false`.
 The plugin always adds to this list the following paths: `src/test`, `build.gradle`, `gradle.properties`, `settings.gradle`. Example: `["somefile.txt", "somefolder"]`
 * `uploadDraftVersion` - used only by `uploadArtifact` task. If true it will upload the IFlow/Value Mapping with "Draft" version number. If false it will use
 the number from MANIFEST file. Default value: `false`.
+* `httpClientsFactory` - configuration for http requests. Its constructor has the following parameters: `useProxyForConnections`, `connectionRequestTimeout`, `connectTimeout`, `socketTimeout`.
+If not provided it will use the following default values: `false`, `300000`, `300000`, `300000`.

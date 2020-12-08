@@ -58,6 +58,9 @@ public abstract class AbstractArtifactTask extends DefaultTask {
     @Input
     protected ArtifactType artifactType;
 
+    @Input
+    protected HttpClientsFactory httpClientsFactory;
+
     protected String artifactExternalId;
 
     protected String packageExternalId;
@@ -77,10 +80,6 @@ public abstract class AbstractArtifactTask extends DefaultTask {
     protected IntegrationContentClient integrationContentClient;
 
     public AbstractArtifactTask() {
-        HttpClientsFactory httpClientsFactory = new HttpClientsFactory();
-        this.integrationPackageClient = new IntegrationPackageClient(SSO_URL);
-        this.cpiIntegrationFlowClient = new CpiIntegrationFlowClient(SSO_URL, integrationPackageClient);
-        this.integrationContentClient = new IntegrationContentClient(SSO_URL, httpClientsFactory);
     }
 
     @TaskAction
@@ -98,6 +97,11 @@ public abstract class AbstractArtifactTask extends DefaultTask {
     protected void defineParameters(boolean checkObjectsExistence) {
         cpiConnectionProperties = new ConnectionProperties(url, username, password);
         System.out.println("cpiConnectionProperties = " + cpiConnectionProperties);
+        System.out.println("httpClientsFactory = " + httpClientsFactory);
+
+        this.integrationPackageClient = new IntegrationPackageClient(SSO_URL, httpClientsFactory);
+        this.cpiIntegrationFlowClient = new CpiIntegrationFlowClient(SSO_URL, integrationPackageClient, httpClientsFactory);
+        this.integrationContentClient = new IntegrationContentClient(SSO_URL, httpClientsFactory);
 
         requestContext = new RequestContext();
         requestContext.setCloudPlatformType(platformType);
