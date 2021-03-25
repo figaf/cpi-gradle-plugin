@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'com.figaf'
-version = '2.3.RELEASE'
+version = '2.4.RELEASE'
 
 repositories {
     jcenter()
@@ -31,7 +31,7 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.8'
     annotationProcessor 'org.projectlombok:lombok:1.18.8'
 
-    compile 'com.github.figaf:cpi-api:1.6'
+    compile 'com.github.figaf:cpi-api:1.7'
     compile 'org.zeroturnaround:zt-zip:1.13'
     compile 'com.squareup.okhttp3:okhttp:4.0.0'
     compile 'org.dom4j:dom4j:2.1.3'
