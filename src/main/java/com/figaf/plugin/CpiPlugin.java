@@ -61,8 +61,8 @@ public class CpiPlugin implements Plugin<Project> {
             } else {
                 abstractIntegrationFlowTask.setAuthenticationType(AuthenticationType.BASIC);
             }
-            abstractIntegrationFlowTask.setClientId(extension.getClientId().getOrNull());
-            abstractIntegrationFlowTask.setClientSecret(extension.getClientSecret().getOrNull());
+            abstractIntegrationFlowTask.setPublicApiClientId(extension.getPublicApiClientId().getOrNull());
+            abstractIntegrationFlowTask.setPublicApiClientSecret(extension.getPublicApiClientSecret().getOrNull());
 
             abstractIntegrationFlowTask.setPackageTechnicalName(extension.getPackageTechnicalName().getOrNull());
             abstractIntegrationFlowTask.setPackageExternalId(extension.getPackageExternalId().getOrNull());

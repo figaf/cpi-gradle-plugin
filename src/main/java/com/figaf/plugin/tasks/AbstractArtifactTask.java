@@ -48,10 +48,10 @@ public abstract class AbstractArtifactTask extends DefaultTask {
     protected AuthenticationType authenticationType;
 
     @Input
-    protected String clientId;
+    protected String publicApiClientId;
 
     @Input
-    protected String clientSecret;
+    protected String publicApiClientSecret;
 
     @Input
     protected String sourceFilePath;
@@ -122,8 +122,8 @@ public abstract class AbstractArtifactTask extends DefaultTask {
         requestContext.setSsoUrl(ssoUrl);
         requestContext.setOauthUrl(oauthTokenUrl);
         requestContext.setAuthenticationType(authenticationType);
-        requestContext.setClientId(clientId);
-        requestContext.setClientSecret(clientSecret);
+        requestContext.setClientId(publicApiClientId);
+        requestContext.setClientSecret(publicApiClientSecret);
 
         sourceFolder = new File(sourceFilePath);
 
@@ -176,7 +176,7 @@ public abstract class AbstractArtifactTask extends DefaultTask {
         System.out.println("ssoUrl = " + ssoUrl);
         System.out.println("oauthTokenUrl = " + oauthTokenUrl);
         System.out.println("authenticationType = " + authenticationType);
-        System.out.println("clientId = " + clientId);
+        System.out.println("publicApiClientId = " + publicApiClientId);
     }
 
 

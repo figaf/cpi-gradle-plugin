@@ -32,9 +32,9 @@ public class CpiPluginExtension {
 
     private final Property<String> authenticationType;
 
-    private final Property<String> clientId;
+    private final Property<String> publicApiClientId;
 
-    private final Property<String> clientSecret;
+    private final Property<String> publicApiClientSecret;
 
     private final Property<String> packageTechnicalName;
 
@@ -64,8 +64,8 @@ public class CpiPluginExtension {
         this.ssoUrl = project.getObjects().property(String.class);
         this.oauthTokenUrl = project.getObjects().property(String.class);
         this.authenticationType = project.getObjects().property(String.class);
-        this.clientId = project.getObjects().property(String.class);
-        this.clientSecret = project.getObjects().property(String.class);
+        this.publicApiClientId = project.getObjects().property(String.class);
+        this.publicApiClientSecret = project.getObjects().property(String.class);
         this.packageTechnicalName = project.getObjects().property(String.class);
         this.packageExternalId = project.getObjects().property(String.class);
         this.artifactTechnicalName = project.getObjects().property(String.class);
