@@ -53,7 +53,13 @@ public class DeployArtifact extends AbstractArtifactTask {
         }
         boolean started = false;
         while (!started && numberOfAttempts <= MAX_NUMBER_OF_ATTEMPTS) {
-            IntegrationContent integrationContent = integrationContentClient.getIntegrationRuntimeArtifactByName(requestContext, artifactTechnicalName);
+            IntegrationContent integrationContent;
+            try {
+                integrationContent = integrationContentClient.getIntegrationRuntimeArtifactByName(requestContext, artifactTechnicalName);
+            } catch (Exception ex) {
+                System.err.println("Check Public API Client Credentials. If you are sure that they are correct, try to execute 'gradlew --stop' to clean gradle cache and rerun the task");
+                throw ex;
+            }
             String integrationRuntimeArtifactStatus = integrationContent.getStatus();
             System.out.println("integrationRuntimeArtifactStatus = " + integrationRuntimeArtifactStatus);
             if ("ERROR".equals(integrationRuntimeArtifactStatus)) {
