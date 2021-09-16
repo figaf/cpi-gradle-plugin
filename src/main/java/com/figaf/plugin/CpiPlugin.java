@@ -1,9 +1,11 @@
 package com.figaf.plugin;
 
+import com.figaf.integration.common.entity.AuthenticationType;
 import com.figaf.integration.common.entity.CloudPlatformType;
 import com.figaf.integration.common.factory.HttpClientsFactory;
 import com.figaf.plugin.enumeration.ArtifactType;
 import com.figaf.plugin.tasks.*;
+import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.provider.SetProperty;
@@ -43,12 +45,25 @@ public class CpiPlugin implements Plugin<Project> {
             abstractIntegrationFlowTask.setUsername(extension.getUsername().getOrNull());
             abstractIntegrationFlowTask.setPassword(extension.getPassword().getOrNull());
             String cpiPlatformTypeString = extension.getPlatformType().getOrNull();
-            if (cpiPlatformTypeString != null) {
+            if (StringUtils.isNotEmpty(cpiPlatformTypeString)) {
                 abstractIntegrationFlowTask.setPlatformType(CloudPlatformType.valueOf(cpiPlatformTypeString));
             } else {
                 abstractIntegrationFlowTask.setPlatformType(CloudPlatformType.NEO);
             }
             abstractIntegrationFlowTask.setSourceFilePath(extension.getSourceFilePath().getOrNull());
+
+            abstractIntegrationFlowTask.setLoginPageUrl(extension.getLoginPageUrl().getOrNull());
+            abstractIntegrationFlowTask.setSsoUrl(extension.getSsoUrl().getOrNull());
+            abstractIntegrationFlowTask.setOauthTokenUrl(extension.getOauthTokenUrl().getOrNull());
+            String authenticationTypeString = extension.getAuthenticationType().getOrNull();
+            if (StringUtils.isNotEmpty(authenticationTypeString)) {
+                abstractIntegrationFlowTask.setAuthenticationType(AuthenticationType.valueOf(authenticationTypeString));
+            } else {
+                abstractIntegrationFlowTask.setAuthenticationType(AuthenticationType.BASIC);
+            }
+            abstractIntegrationFlowTask.setPublicApiClientId(extension.getPublicApiClientId().getOrNull());
+            abstractIntegrationFlowTask.setPublicApiClientSecret(extension.getPublicApiClientSecret().getOrNull());
+
             abstractIntegrationFlowTask.setPackageTechnicalName(extension.getPackageTechnicalName().getOrNull());
             abstractIntegrationFlowTask.setPackageExternalId(extension.getPackageExternalId().getOrNull());
             abstractIntegrationFlowTask.setArtifactTechnicalName(extension.getArtifactTechnicalName().getOrNull());

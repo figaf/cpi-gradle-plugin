@@ -1,9 +1,6 @@
 package com.figaf.plugin.tasks;
 
-import com.figaf.integration.common.entity.CloudPlatformType;
-import com.figaf.integration.common.entity.ConnectionProperties;
-import com.figaf.integration.common.entity.Platform;
-import com.figaf.integration.common.entity.RequestContext;
+import com.figaf.integration.common.entity.*;
 import com.figaf.integration.common.factory.HttpClientsFactory;
 import com.figaf.integration.cpi.client.CpiIntegrationFlowClient;
 import com.figaf.integration.cpi.client.IntegrationContentClient;
@@ -18,18 +15,13 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author Arsenii Istlentev
  */
 @Setter
 public abstract class AbstractArtifactTask extends DefaultTask {
-
-    private final static String SSO_URL = "https://accounts.sap.com/saml2/idp/sso";
 
     @Input
     protected String url;
@@ -42,6 +34,24 @@ public abstract class AbstractArtifactTask extends DefaultTask {
 
     @Input
     protected CloudPlatformType platformType;
+
+    @Input
+    protected String loginPageUrl;
+
+    @Input
+    protected String ssoUrl;
+
+    @Input
+    protected String oauthTokenUrl;
+
+    @Input
+    protected AuthenticationType authenticationType;
+
+    @Input
+    protected String publicApiClientId;
+
+    @Input
+    protected String publicApiClientSecret;
 
     @Input
     protected String sourceFilePath;
@@ -99,15 +109,21 @@ public abstract class AbstractArtifactTask extends DefaultTask {
         System.out.println("cpiConnectionProperties = " + cpiConnectionProperties);
         System.out.println("httpClientsFactory = " + httpClientsFactory);
 
-        this.integrationPackageClient = new IntegrationPackageClient(SSO_URL, httpClientsFactory);
-        this.cpiIntegrationFlowClient = new CpiIntegrationFlowClient(SSO_URL, integrationPackageClient, httpClientsFactory);
-        this.integrationContentClient = new IntegrationContentClient(SSO_URL, httpClientsFactory);
+        this.integrationPackageClient = new IntegrationPackageClient(httpClientsFactory);
+        this.cpiIntegrationFlowClient = new CpiIntegrationFlowClient(integrationPackageClient, httpClientsFactory);
+        this.integrationContentClient = new IntegrationContentClient(httpClientsFactory);
 
         requestContext = new RequestContext();
         requestContext.setCloudPlatformType(platformType);
         requestContext.setConnectionProperties(cpiConnectionProperties);
         requestContext.setPlatform(Platform.CPI);
         requestContext.setRestTemplateWrapperKey("");
+        requestContext.setLoginPageUrl(loginPageUrl);
+        requestContext.setSsoUrl(ssoUrl);
+        requestContext.setOauthUrl(oauthTokenUrl);
+        requestContext.setAuthenticationType(authenticationType);
+        requestContext.setClientId(publicApiClientId);
+        requestContext.setClientSecret(publicApiClientSecret);
 
         sourceFolder = new File(sourceFilePath);
 
@@ -155,6 +171,12 @@ public abstract class AbstractArtifactTask extends DefaultTask {
         System.out.println("artifactExternalId = " + artifactExternalId);
         System.out.println("deployedBundleVersion = " + deployedBundleVersion);
         System.out.println("ignoreFilesList = " + ignoreFilesList);
+
+        System.out.println("loginPageUrl = " + loginPageUrl);
+        System.out.println("ssoUrl = " + ssoUrl);
+        System.out.println("oauthTokenUrl = " + oauthTokenUrl);
+        System.out.println("authenticationType = " + authenticationType);
+        System.out.println("publicApiClientId = " + publicApiClientId);
     }
 
 
