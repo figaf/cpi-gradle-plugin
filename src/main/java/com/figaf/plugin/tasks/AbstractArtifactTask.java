@@ -3,6 +3,9 @@ package com.figaf.plugin.tasks;
 import com.figaf.integration.common.entity.*;
 import com.figaf.integration.common.factory.HttpClientsFactory;
 import com.figaf.integration.cpi.client.CpiIntegrationFlowClient;
+import com.figaf.integration.cpi.client.CpiValueMappingClient;
+import com.figaf.integration.cpi.client.CpiScriptCollectionClient;
+import com.figaf.integration.cpi.client.CpiSharedMessageMappingClient;
 import com.figaf.integration.cpi.client.IntegrationContentClient;
 import com.figaf.integration.cpi.client.IntegrationPackageClient;
 import com.figaf.integration.cpi.entity.designtime_artifacts.CpiArtifact;
@@ -87,6 +90,12 @@ public abstract class AbstractArtifactTask extends DefaultTask {
 
     protected CpiIntegrationFlowClient cpiIntegrationFlowClient;
 
+    protected CpiValueMappingClient cpiValueMappingClient;
+
+    protected CpiScriptCollectionClient cpiScriptCollectionClient;
+
+    protected CpiSharedMessageMappingClient cpiSharedMessageMappingClient;
+
     protected IntegrationContentClient integrationContentClient;
 
     public AbstractArtifactTask() {
@@ -111,6 +120,9 @@ public abstract class AbstractArtifactTask extends DefaultTask {
 
         this.integrationPackageClient = new IntegrationPackageClient(httpClientsFactory);
         this.cpiIntegrationFlowClient = new CpiIntegrationFlowClient(integrationPackageClient, httpClientsFactory);
+        this.cpiValueMappingClient = new CpiValueMappingClient(integrationPackageClient, httpClientsFactory);
+        this.cpiScriptCollectionClient = new CpiScriptCollectionClient(integrationPackageClient, httpClientsFactory);
+        this.cpiSharedMessageMappingClient = new CpiSharedMessageMappingClient(integrationPackageClient, httpClientsFactory);
         this.integrationContentClient = new IntegrationContentClient(httpClientsFactory);
 
         requestContext = new RequestContext();
@@ -145,8 +157,9 @@ public abstract class AbstractArtifactTask extends DefaultTask {
             CpiArtifact cpiIntegrationObjectData = getArtifactData(
                 requestContext,
                 packageTechnicalName,
+                packageExternalId,
                 artifactTechnicalName,
-                this.artifactType.toString()
+                artifactType
             );
 
             if (cpiIntegrationObjectData != null) {
@@ -183,17 +196,46 @@ public abstract class AbstractArtifactTask extends DefaultTask {
     private CpiArtifact getArtifactData(
         RequestContext requestContext,
         String packageTechnicalName,
+        String packageExternalId,
         String artifactTechnicalName,
-        String artifactType
+        ArtifactType artifactType
     ) {
 
-        List<CpiArtifact> artifactsInThePackage = cpiIntegrationFlowClient.getArtifactsByPackage(
-            requestContext,
-            packageTechnicalName,
-            null,
-            null,
-            Collections.singleton(artifactType)
-        );
+        List<CpiArtifact> artifactsInThePackage = new ArrayList<>();
+        switch (artifactType) {
+            case CPI_IFLOW:
+                artifactsInThePackage = cpiIntegrationFlowClient.getIFlowsByPackage(
+                    requestContext,
+                    packageTechnicalName,
+                    null,
+                    packageExternalId
+                );
+                break;
+            case VALUE_MAPPING:
+                artifactsInThePackage = cpiValueMappingClient.getValueMappingsByPackage(
+                    requestContext,
+                    packageTechnicalName,
+                    null,
+                    packageExternalId
+                );
+                break;
+            case SCRIPT_COLLECTION:
+                artifactsInThePackage = cpiScriptCollectionClient.getScriptCollectionsByPackage(
+                    requestContext,
+                    packageTechnicalName,
+                    null,
+                    packageExternalId
+                );
+                break;
+            case SHARED_MESSAGE_MAPPING:
+                artifactsInThePackage = cpiSharedMessageMappingClient.getSharedMessageMappingByPackage(
+                    requestContext,
+                    packageTechnicalName,
+                    null,
+                    packageExternalId
+                );
+                break;
+        }
 
         CpiArtifact artifactCpiIntegrationObjectData = null;
 

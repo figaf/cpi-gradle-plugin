@@ -63,7 +63,7 @@ public class DownloadArtifact extends AbstractArtifactTask {
                 }
             }
 
-            byte[] bundledModel = cpiIntegrationFlowClient.downloadArtifact(requestContext, packageExternalId, artifactExternalId);
+            byte[] bundledModel = downloadArtifact();
             if (ArtifactType.VALUE_MAPPING.equals(artifactType)) {
                 FileUtils.writeByteArrayToFile(artifactZipArchiveFile, formatValueMapping(bundledModel));
             } else {
@@ -108,5 +108,42 @@ public class DownloadArtifact extends AbstractArtifactTask {
             log.error("Error occurred while formatting value mapping: " + ex.getMessage(), ex);
             throw new RuntimeException("Error occurred while formatting value mapping: " + ex.getMessage(), ex);
         }
+    }
+
+    private byte[] downloadArtifact() {
+        byte[] bundledModel = null;
+
+        switch (artifactType) {
+            case CPI_IFLOW:
+                bundledModel = cpiIntegrationFlowClient.downloadIFlow(
+                    requestContext,
+                    packageExternalId,
+                    artifactExternalId
+                );
+                break;
+            case VALUE_MAPPING:
+                bundledModel = cpiValueMappingClient.downloadValueMapping(
+                    requestContext,
+                    packageExternalId,
+                    artifactExternalId
+                );
+                break;
+            case SCRIPT_COLLECTION:
+                bundledModel = cpiScriptCollectionClient.downloadScriptCollection(
+                    requestContext,
+                    packageExternalId,
+                    artifactExternalId
+                );
+                break;
+            case SHARED_MESSAGE_MAPPING:
+                bundledModel = cpiSharedMessageMappingClient.downloadSharedMessageMapping(
+                    requestContext,
+                    packageExternalId,
+                    artifactExternalId
+                );
+                break;
+        }
+
+        return bundledModel;
     }
 }
