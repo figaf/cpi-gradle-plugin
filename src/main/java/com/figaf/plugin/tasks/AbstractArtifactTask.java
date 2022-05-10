@@ -2,12 +2,8 @@ package com.figaf.plugin.tasks;
 
 import com.figaf.integration.common.entity.*;
 import com.figaf.integration.common.factory.HttpClientsFactory;
-import com.figaf.integration.cpi.client.CpiIntegrationFlowClient;
-import com.figaf.integration.cpi.client.CpiValueMappingClient;
-import com.figaf.integration.cpi.client.CpiScriptCollectionClient;
-import com.figaf.integration.cpi.client.CpiSharedMessageMappingClient;
-import com.figaf.integration.cpi.client.IntegrationContentClient;
-import com.figaf.integration.cpi.client.IntegrationPackageClient;
+import com.figaf.integration.cpi.client.*;
+import com.figaf.integration.cpi.client.CpiMessageMappingClient;
 import com.figaf.integration.cpi.entity.designtime_artifacts.CpiArtifact;
 import com.figaf.integration.cpi.entity.designtime_artifacts.IntegrationPackage;
 import com.figaf.plugin.enumeration.ArtifactType;
@@ -94,7 +90,7 @@ public abstract class AbstractArtifactTask extends DefaultTask {
 
     protected CpiScriptCollectionClient cpiScriptCollectionClient;
 
-    protected CpiSharedMessageMappingClient cpiSharedMessageMappingClient;
+    protected CpiMessageMappingClient cpiMessageMappingClient;
 
     protected IntegrationContentClient integrationContentClient;
 
@@ -122,7 +118,7 @@ public abstract class AbstractArtifactTask extends DefaultTask {
         this.cpiIntegrationFlowClient = new CpiIntegrationFlowClient(integrationPackageClient, httpClientsFactory);
         this.cpiValueMappingClient = new CpiValueMappingClient(integrationPackageClient, httpClientsFactory);
         this.cpiScriptCollectionClient = new CpiScriptCollectionClient(integrationPackageClient, httpClientsFactory);
-        this.cpiSharedMessageMappingClient = new CpiSharedMessageMappingClient(integrationPackageClient, httpClientsFactory);
+        this.cpiMessageMappingClient = new CpiMessageMappingClient(integrationPackageClient, httpClientsFactory);
         this.integrationContentClient = new IntegrationContentClient(httpClientsFactory);
 
         requestContext = new RequestContext();
@@ -227,8 +223,8 @@ public abstract class AbstractArtifactTask extends DefaultTask {
                     packageExternalId
                 );
                 break;
-            case SHARED_MESSAGE_MAPPING:
-                artifactsInThePackage = cpiSharedMessageMappingClient.getSharedMessageMappingByPackage(
+            case CPI_MESSAGE_MAPPING:
+                artifactsInThePackage = cpiMessageMappingClient.getMessageMappingsByPackage(
                     requestContext,
                     packageTechnicalName,
                     null,

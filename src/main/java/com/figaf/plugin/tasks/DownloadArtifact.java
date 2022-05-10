@@ -135,8 +135,8 @@ public class DownloadArtifact extends AbstractArtifactTask {
                     artifactExternalId
                 );
                 break;
-            case SHARED_MESSAGE_MAPPING:
-                bundledModel = cpiSharedMessageMappingClient.downloadSharedMessageMapping(
+            case CPI_MESSAGE_MAPPING:
+                bundledModel = cpiMessageMappingClient.downloadMessageMapping(
                     requestContext,
                     packageExternalId,
                     artifactExternalId

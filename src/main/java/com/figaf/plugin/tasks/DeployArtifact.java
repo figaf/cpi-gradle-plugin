@@ -104,8 +104,8 @@ public class DeployArtifact extends AbstractArtifactTask {
                     artifactTechnicalName
                 );
                 break;
-            case SHARED_MESSAGE_MAPPING:
-                taskId = cpiSharedMessageMappingClient.deploySharedMessageMapping(
+            case CPI_MESSAGE_MAPPING:
+                taskId = cpiMessageMappingClient.deployMessageMapping(
                     requestContext,
                     packageExternalId,
                     artifactExternalId
@@ -129,8 +129,8 @@ public class DeployArtifact extends AbstractArtifactTask {
             case SCRIPT_COLLECTION:
                 deployStatus = cpiScriptCollectionClient.checkDeploymentStatus(requestContext, taskId);
                 break;
-            case SHARED_MESSAGE_MAPPING:
-                deployStatus = cpiSharedMessageMappingClient.checkDeploymentStatus(requestContext, taskId);
+            case CPI_MESSAGE_MAPPING:
+                deployStatus = cpiMessageMappingClient.checkDeploymentStatus(requestContext, taskId);
                 break;
         }
 

@@ -43,7 +43,7 @@ public class UploadArtifact extends AbstractArtifactTask {
         ARTIFACT_TYPE_TO_PREFIX_MAP.put(CPI_IFLOW, "iflow");
         ARTIFACT_TYPE_TO_PREFIX_MAP.put(VALUE_MAPPING, "vm");
         ARTIFACT_TYPE_TO_PREFIX_MAP.put(SCRIPT_COLLECTION, "sc");
-        ARTIFACT_TYPE_TO_PREFIX_MAP.put(SHARED_MESSAGE_MAPPING, "mm");
+        ARTIFACT_TYPE_TO_PREFIX_MAP.put(CPI_MESSAGE_MAPPING, "mm");
     }
 
     @Getter
@@ -91,10 +91,10 @@ public class UploadArtifact extends AbstractArtifactTask {
                      (CreateScriptCollectionRequest) uploadArtifactRequest
                  );
                 break;
-            case SHARED_MESSAGE_MAPPING:
-                cpiSharedMessageMappingClient.createSharedMessageMapping(
+            case CPI_MESSAGE_MAPPING:
+                cpiMessageMappingClient.createMessageMapping(
                     requestContext,
-                    (CreateSharedMessageMappingRequest) uploadArtifactRequest
+                    (CreateMessageMappingRequest) uploadArtifactRequest
                 );
                 break;
         }
@@ -114,10 +114,10 @@ public class UploadArtifact extends AbstractArtifactTask {
                     (UpdateScriptCollectionRequest) uploadArtifactRequest
                 );
                 break;
-            case SHARED_MESSAGE_MAPPING:
-                cpiSharedMessageMappingClient.updateSharedMessageMapping(
+            case CPI_MESSAGE_MAPPING:
+                cpiMessageMappingClient.updateMessageMapping(
                     requestContext,
-                    (UpdateSharedMessageMappingRequest) uploadArtifactRequest
+                    (UpdateMessageMappingRequest) uploadArtifactRequest
                 );
                 break;
         }
@@ -144,8 +144,8 @@ public class UploadArtifact extends AbstractArtifactTask {
             case SCRIPT_COLLECTION:
                 createRequest = CreateScriptCollectionRequest.builder().build();
                 break;
-            case SHARED_MESSAGE_MAPPING:
-            createRequest = CreateSharedMessageMappingRequest.builder().build();
+            case CPI_MESSAGE_MAPPING:
+            createRequest = CreateMessageMappingRequest.builder().build();
                 break;
         }
 
@@ -165,8 +165,8 @@ public class UploadArtifact extends AbstractArtifactTask {
             case SCRIPT_COLLECTION:
                 createRequest = UpdateScriptCollectionRequest.builder().build();
                 break;
-            case SHARED_MESSAGE_MAPPING:
-                createRequest = UpdateSharedMessageMappingRequest.builder().build();
+            case CPI_MESSAGE_MAPPING:
+                createRequest = UpdateMessageMappingRequest.builder().build();
                 break;
         }
 
