@@ -1,9 +1,8 @@
 package com.figaf.plugin.tasks;
 
-import com.figaf.integration.cpi.entity.designtime_artifacts.CreateOrUpdateCpiArtifactRequest;
-import com.figaf.integration.cpi.entity.designtime_artifacts.CreateOrUpdateIFlowRequest;
-import com.figaf.integration.cpi.entity.designtime_artifacts.CreateOrUpdatePackageRequest;
-import com.figaf.integration.cpi.entity.designtime_artifacts.CreateOrUpdateValueMappingRequest;
+import com.figaf.integration.cpi.entity.designtime_artifacts.*;
+import com.figaf.plugin.enumeration.ArtifactType;
+import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -22,12 +21,12 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.UUID;
+import java.util.*;
 import java.util.jar.Manifest;
 import java.util.regex.Pattern;
+
+import static com.figaf.plugin.enumeration.ArtifactType.*;
+import static java.lang.String.format;
 
 /**
  * @author Arsenii Istlentev
@@ -39,7 +38,15 @@ public class UploadArtifact extends AbstractArtifactTask {
 
     private static final Pattern NS_ELEMENT_WITHOUT_PREFIX_PATTERN = Pattern.compile("(?<!./)/([\\w-_.]+)(?!\\w*:)");
     private static final Pattern NS_ELEMENT_WITH_PREFIX_PATTERN = Pattern.compile("/(\\w+):([\\w-_.]+)");
+    private static final Map<ArtifactType, String> ARTIFACT_TYPE_TO_PREFIX_MAP = new HashMap<>();
+    static {
+        ARTIFACT_TYPE_TO_PREFIX_MAP.put(CPI_IFLOW, "iflow");
+        ARTIFACT_TYPE_TO_PREFIX_MAP.put(VALUE_MAPPING, "vm");
+        ARTIFACT_TYPE_TO_PREFIX_MAP.put(SCRIPT_COLLECTION, "sc");
+        ARTIFACT_TYPE_TO_PREFIX_MAP.put(CPI_MESSAGE_MAPPING, "mm");
+    }
 
+    @Getter
     @Input
     private boolean uploadDraftVersion;
 
@@ -47,154 +54,246 @@ public class UploadArtifact extends AbstractArtifactTask {
         System.out.println("uploadArtifact");
         defineParameters(false);
 
-        Path pathToDirectoryWithExcludedFiles = null;
-        CreateOrUpdateCpiArtifactRequest uploadArtifactRequest = null;
-
-        switch (artifactType) {
-            case CPI_IFLOW: {
-                pathToDirectoryWithExcludedFiles = Files.createTempDirectory(
-                    "cpi-plugin-upload-iflow-" + UUID.randomUUID().toString()
-                );
-                uploadArtifactRequest = new CreateOrUpdateIFlowRequest();
-                break;
-            }
-            case VALUE_MAPPING: {
-                pathToDirectoryWithExcludedFiles = Files.createTempDirectory(
-                    "cpi-plugin-upload-vm-" + UUID.randomUUID().toString()
-                );
-                uploadArtifactRequest = new CreateOrUpdateValueMappingRequest();
-                break;
-            }
-        }
+        Path pathToDirectoryWithExcludedFiles = Files.createTempDirectory(
+            format(
+                "cpi-plugin-upload-%s-%s",
+                ARTIFACT_TYPE_TO_PREFIX_MAP.get(artifactType),
+                UUID.randomUUID()
+            )
+        );
+        CreateOrUpdateCpiArtifactRequest uploadArtifactRequest = createRequest();
 
         File directoryWithExcludedFiles = pathToDirectoryWithExcludedFiles.toFile();
         try {
-            List<Path> pathsToExclude = new ArrayList<>();
-            for (String fileNameToExclude : ignoreFilesList) {
-                pathsToExclude.add(Paths.get(sourceFilePath, fileNameToExclude));
-            }
-
-            FileUtils.copyDirectory(sourceFolder, directoryWithExcludedFiles, pathname -> {
-                boolean accept = true;
-                for (Path pathToExclude : pathsToExclude) {
-                    if (pathname.toString().contains(pathToExclude.toString())) {
-                        accept = false;
-                        break;
-                    }
-                }
-                return accept;
-            });
-
-            Manifest manifest = parseManifestFile(directoryWithExcludedFiles);
-            String artifactDisplayedName = manifest.getMainAttributes().getValue("Bundle-Name");
-            if (artifactDisplayedName == null) {
-                log.error("artifactDisplayedName is null, artifactTechnicalName will be used instead");
-                artifactDisplayedName = artifactTechnicalName;
-            }
-
-            Properties properties = getMetainfoProperties(directoryWithExcludedFiles);
-
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            ZipUtil.pack(directoryWithExcludedFiles, bos);
-            bos.close();
-            byte[] bundledModel = bos.toByteArray();
-
-            if (packageExternalId == null) {
-
-                CreateOrUpdatePackageRequest createIntegrationPackageRequest = new CreateOrUpdatePackageRequest();
-                createIntegrationPackageRequest.setTechnicalName(packageTechnicalName);
-
-                Path packageInfoPath = Paths.get(sourceFolder.getParentFile().getAbsolutePath(), "/integration-package-info.xml");
-                File packageInfoFile = packageInfoPath.toFile();
-
-                if (packageInfoFile.exists() && packageInfoFile.isFile()) {
-
-                    Document document = parseDocument(packageInfoFile);
-
-                    List<Element> elements = selectNodes(document, "/entry/content/properties/DisplayName");
-                    if (CollectionUtils.isNotEmpty(elements)) {
-                        createIntegrationPackageRequest.setDisplayName(
-                            elements.get(0).getStringValue()
-                        );
-                    }
-
-                    elements = selectNodes(document, "/entry/content/properties/ShortText");
-                    if (CollectionUtils.isNotEmpty(elements)) {
-                        createIntegrationPackageRequest.setShortDescription(
-                            elements.get(0).getStringValue()
-                        );
-                    }
-
-                    elements = selectNodes(document, "/entry/content/properties/Vendor");
-                    if (CollectionUtils.isNotEmpty(elements)) {
-                        createIntegrationPackageRequest.setVendor(
-                            elements.get(0).getStringValue()
-                        );
-                    }
-
-                    elements = selectNodes(document, "/entry/content/properties/Version");
-                    if (CollectionUtils.isNotEmpty(elements)) {
-                        createIntegrationPackageRequest.setVersion(
-                            elements.get(0).getStringValue()
-                        );
-                    }
-
-                } else {
-                    createIntegrationPackageRequest.setDisplayName(packageTechnicalName);
-                    createIntegrationPackageRequest.setVersion("1.0.0");
-                }
-
-                packageExternalId = integrationPackageClient.createIntegrationPackage(requestContext, createIntegrationPackageRequest);
-            }
-
-            uploadArtifactRequest.setName(artifactDisplayedName);
-            uploadArtifactRequest.setDescription(properties.getProperty("description"));
-
-            CreateOrUpdateCpiArtifactRequest.AdditionalAttributes additionalAttributes = new CreateOrUpdateCpiArtifactRequest.AdditionalAttributes();
-            String sourceValue = properties.getProperty("source");
-            if (sourceValue != null) {
-                additionalAttributes.getSource().add(sourceValue);
-            }
-            String targetValue = properties.getProperty("target");
-            if (targetValue != null) {
-                additionalAttributes.getTarget().add(targetValue);
-            }
-            uploadArtifactRequest.setAdditionalAttrs(additionalAttributes);
-
+            copySourceFolderToTempDirectoryWithExcludedFiles(directoryWithExcludedFiles);
+            fillUploadRequest(uploadArtifactRequest, directoryWithExcludedFiles);
             if (artifactExternalId == null) {
-                uploadArtifactRequest.setId(artifactTechnicalName);
-
-                if (uploadArtifactRequest instanceof CreateOrUpdateIFlowRequest) {
-                    cpiIntegrationFlowClient.createIntegrationFlow(
-                        requestContext,
-                        packageExternalId,
-                        (CreateOrUpdateIFlowRequest)uploadArtifactRequest,
-                        bundledModel
-                    );
-                } else {
-                    cpiIntegrationFlowClient.createValueMapping(
-                        requestContext,
-                        packageExternalId,
-                        (CreateOrUpdateValueMappingRequest) uploadArtifactRequest,
-                        bundledModel
-                    );
-                }
-
+                createArtifact(uploadArtifactRequest);
             } else {
-                uploadArtifactRequest.setId(artifactExternalId);
-                cpiIntegrationFlowClient.updateArtifact(
-                    requestContext,
-                    packageExternalId,
-                    artifactExternalId,
-                    uploadArtifactRequest,
-                    bundledModel,
-                    uploadDraftVersion,
-                    manifest.getMainAttributes().getValue("Bundle-Version")
-                );
+                updateArtifact(uploadArtifactRequest);
             }
         } finally {
             FileUtils.deleteDirectory(directoryWithExcludedFiles);
         }
+    }
+
+    private void createArtifact(CreateOrUpdateCpiArtifactRequest uploadArtifactRequest) {
+        switch (artifactType) {
+            case CPI_IFLOW:
+                cpiIntegrationFlowClient.createIFlow(requestContext, (CreateIFlowRequest) uploadArtifactRequest);
+                break;
+            case VALUE_MAPPING:
+                cpiValueMappingClient.createValueMapping(requestContext, (CreateValueMappingRequest) uploadArtifactRequest);
+                break;
+            case SCRIPT_COLLECTION:
+                 cpiScriptCollectionClient.createScriptCollection(
+                     requestContext,
+                     (CreateScriptCollectionRequest) uploadArtifactRequest
+                 );
+                break;
+            case CPI_MESSAGE_MAPPING:
+                cpiMessageMappingClient.createMessageMapping(
+                    requestContext,
+                    (CreateMessageMappingRequest) uploadArtifactRequest
+                );
+                break;
+        }
+    }
+
+    private void updateArtifact(CreateOrUpdateCpiArtifactRequest uploadArtifactRequest) {
+        switch (artifactType) {
+            case CPI_IFLOW:
+                cpiIntegrationFlowClient.updateIFlow(requestContext, (UpdateIFlowRequest) uploadArtifactRequest);
+                break;
+            case VALUE_MAPPING:
+                cpiValueMappingClient.updateValueMapping(requestContext, (UpdateValueMappingRequest) uploadArtifactRequest);
+                break;
+            case SCRIPT_COLLECTION:
+                cpiScriptCollectionClient.updateScriptCollection(
+                    requestContext,
+                    (UpdateScriptCollectionRequest) uploadArtifactRequest
+                );
+                break;
+            case CPI_MESSAGE_MAPPING:
+                cpiMessageMappingClient.updateMessageMapping(
+                    requestContext,
+                    (UpdateMessageMappingRequest) uploadArtifactRequest
+                );
+                break;
+        }
+    }
+
+    private CreateOrUpdateCpiArtifactRequest createRequest() {
+        if (artifactExternalId == null) {
+            return createCreateRequest();
+        } else {
+            return createUpdateRequest();
+        }
+    }
+
+    private CreateOrUpdateCpiArtifactRequest createCreateRequest() {
+        CreateOrUpdateCpiArtifactRequest createRequest = null;
+
+        switch (artifactType) {
+            case CPI_IFLOW:
+                createRequest = CreateIFlowRequest.builder().build();
+                break;
+            case VALUE_MAPPING:
+                createRequest = CreateValueMappingRequest.builder().build();
+                break;
+            case SCRIPT_COLLECTION:
+                createRequest = CreateScriptCollectionRequest.builder().build();
+                break;
+            case CPI_MESSAGE_MAPPING:
+            createRequest = CreateMessageMappingRequest.builder().build();
+                break;
+        }
+
+        return createRequest;
+    }
+
+    private CreateOrUpdateCpiArtifactRequest createUpdateRequest() {
+        CreateOrUpdateCpiArtifactRequest createRequest = null;
+
+        switch (artifactType) {
+            case CPI_IFLOW:
+                createRequest = UpdateIFlowRequest.builder().build();
+                break;
+            case VALUE_MAPPING:
+                createRequest = UpdateValueMappingRequest.builder().build();
+                break;
+            case SCRIPT_COLLECTION:
+                createRequest = UpdateScriptCollectionRequest.builder().build();
+                break;
+            case CPI_MESSAGE_MAPPING:
+                createRequest = UpdateMessageMappingRequest.builder().build();
+                break;
+        }
+
+        return createRequest;
+    }
+
+    private void fillUploadRequest(CreateOrUpdateCpiArtifactRequest uploadArtifactRequest, File directoryWithExcludedFiles) throws IOException {
+        if (artifactExternalId != null) {
+            uploadArtifactRequest.setId(artifactExternalId);
+            uploadArtifactRequest.setUploadDraftVersion(uploadDraftVersion);
+        } else {
+            uploadArtifactRequest.setId(artifactTechnicalName);
+        }
+        fillPackageExternalIdAndCreatePackageIfNeeded(uploadArtifactRequest);
+        fillBundledModel(uploadArtifactRequest, directoryWithExcludedFiles);
+        fillUploadRequestViaManifest(uploadArtifactRequest, directoryWithExcludedFiles);
+        fillUploadRequestViaProperties(uploadArtifactRequest, directoryWithExcludedFiles);
+    }
+
+    private void fillUploadRequestViaManifest(CreateOrUpdateCpiArtifactRequest uploadArtifactRequest, File directoryWithExcludedFiles) {
+        Manifest manifest = parseManifestFile(directoryWithExcludedFiles);
+        String artifactDisplayedName = manifest.getMainAttributes().getValue("Bundle-Name");
+        if (artifactDisplayedName == null) {
+            log.error("artifactDisplayedName is null, artifactTechnicalName will be used instead");
+            artifactDisplayedName = artifactTechnicalName;
+        }
+
+        uploadArtifactRequest.setName(artifactDisplayedName);
+        if (artifactExternalId != null) {
+            uploadArtifactRequest.setNewArtifactVersion(manifest.getMainAttributes().getValue("Bundle-Version"));
+        }
+    }
+
+    private void fillUploadRequestViaProperties(CreateOrUpdateCpiArtifactRequest uploadArtifactRequest, File directoryWithExcludedFiles) throws IOException {
+        Properties properties = getMetainfoProperties(directoryWithExcludedFiles);
+
+        uploadArtifactRequest.setDescription(properties.getProperty("description"));
+
+        CreateOrUpdateCpiArtifactRequest.AdditionalAttributes additionalAttributes = new CreateOrUpdateCpiArtifactRequest.AdditionalAttributes();
+        String sourceValue = properties.getProperty("source");
+        if (sourceValue != null) {
+            additionalAttributes.getSource().add(sourceValue);
+        }
+        String targetValue = properties.getProperty("target");
+        if (targetValue != null) {
+            additionalAttributes.getTarget().add(targetValue);
+        }
+        uploadArtifactRequest.setAdditionalAttrs(additionalAttributes);
+    }
+
+    private void fillBundledModel(CreateOrUpdateCpiArtifactRequest uploadArtifactRequest, File directoryWithExcludedFiles) throws IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ZipUtil.pack(directoryWithExcludedFiles, bos);
+        bos.close();
+        uploadArtifactRequest.setBundledModel(bos.toByteArray());
+    }
+
+    private void fillPackageExternalIdAndCreatePackageIfNeeded(CreateOrUpdateCpiArtifactRequest uploadArtifactRequest) {
+        if (packageExternalId == null) {
+            createPackage();
+        }
+        uploadArtifactRequest.setPackageExternalId(packageExternalId);
+    }
+
+    private void copySourceFolderToTempDirectoryWithExcludedFiles(File directoryWithExcludedFiles) throws IOException {
+        List<Path> pathsToExclude = new ArrayList<>();
+        for (String fileNameToExclude : ignoreFilesList) {
+            pathsToExclude.add(Paths.get(sourceFilePath, fileNameToExclude));
+        }
+
+        FileUtils.copyDirectory(sourceFolder, directoryWithExcludedFiles, pathname -> {
+            boolean accept = true;
+            for (Path pathToExclude : pathsToExclude) {
+                if (pathname.toString().contains(pathToExclude.toString())) {
+                    accept = false;
+                    break;
+                }
+            }
+            return accept;
+        });
+    }
+
+    private void createPackage() {
+        CreateOrUpdatePackageRequest createIntegrationPackageRequest = new CreateOrUpdatePackageRequest();
+        createIntegrationPackageRequest.setTechnicalName(packageTechnicalName);
+
+        Path packageInfoPath = Paths.get(sourceFolder.getParentFile().getAbsolutePath(), "/integration-package-info.xml");
+        File packageInfoFile = packageInfoPath.toFile();
+
+        if (packageInfoFile.exists() && packageInfoFile.isFile()) {
+
+            Document document = parseDocument(packageInfoFile);
+
+            List<Element> elements = selectNodes(document, "/entry/content/properties/DisplayName");
+            if (CollectionUtils.isNotEmpty(elements)) {
+                createIntegrationPackageRequest.setDisplayName(
+                    elements.get(0).getStringValue()
+                );
+            }
+
+            elements = selectNodes(document, "/entry/content/properties/ShortText");
+            if (CollectionUtils.isNotEmpty(elements)) {
+                createIntegrationPackageRequest.setShortDescription(
+                    elements.get(0).getStringValue()
+                );
+            }
+
+            elements = selectNodes(document, "/entry/content/properties/Vendor");
+            if (CollectionUtils.isNotEmpty(elements)) {
+                createIntegrationPackageRequest.setVendor(
+                    elements.get(0).getStringValue()
+                );
+            }
+
+            elements = selectNodes(document, "/entry/content/properties/Version");
+            if (CollectionUtils.isNotEmpty(elements)) {
+                createIntegrationPackageRequest.setVersion(
+                    elements.get(0).getStringValue()
+                );
+            }
+
+        } else {
+            createIntegrationPackageRequest.setDisplayName(packageTechnicalName);
+            createIntegrationPackageRequest.setVersion("1.0.0");
+        }
+
+        packageExternalId = integrationPackageClient.createIntegrationPackage(requestContext, createIntegrationPackageRequest);
     }
 
     private Manifest parseManifestFile(File directoryWithExcludedFiles) {
@@ -233,7 +332,7 @@ public class UploadArtifact extends AbstractArtifactTask {
             SAXReader reader = new SAXReader();
             document = reader.read(bais);
         } catch (Exception ex) {
-            String errorMsg = String.format("Error while parsing xml document: %s", ex.getMessage());
+            String errorMsg = format("Error while parsing xml document: %s", ex.getMessage());
             log.error(errorMsg, ex);
             throw new RuntimeException(errorMsg, ex);
         } finally {
@@ -256,7 +355,7 @@ public class UploadArtifact extends AbstractArtifactTask {
                 Dom4jXPath xPath = new Dom4jXPath(xPathString);
                 return xPath.selectNodes(document);
             } catch (Exception ex) {
-                String errorMsg = String.format("Error while applying xPath to xml document: %s", ex.getMessage());
+                String errorMsg = format("Error while applying xPath to xml document: %s", ex.getMessage());
                 log.error(errorMsg, ex);
                 throw new RuntimeException(errorMsg, ex);
             }
