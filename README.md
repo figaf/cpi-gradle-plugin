@@ -60,14 +60,13 @@ build.gradle
 ```
 buildscript {
     repositories {
-        mavenLocal()
-        jcenter()
         maven { url "https://jitpack.io" }
+        mavenCentral()
     }
 }
 
 plugins {
-    id 'com.figaf.cpi-plugin' version '2.0.RELEASE' apply false
+    id 'com.figaf.cpi-plugin' version '2.9.RELEASE' apply false
 }
 
 configure(subprojects.findAll()) { sub ->
@@ -77,22 +76,52 @@ configure(subprojects.findAll()) { sub ->
 
     repositories {
         mavenLocal()
-        jcenter()
+        mavenCentral()
     }
-
+    
     if (sub.name.startsWith("iflow-")) {
 
         apply plugin: 'com.figaf.cpi-plugin'
+
+        sourceSets {
+            test {
+                groovy {
+                    srcDirs = ['src/test/groovy','src/main/resources/script']
+                }
+            }
+        }
+
+        dependencies {
+            testImplementation project(":common")
+            testImplementation fileTree(dir: 'src/main/resources/lib', include: '*.jar')
+        }
+
+        test {
+            dependsOn ':common:test'
+            useJUnitPlatform()
+        }
 
         cpiPlugin {
             url = cpiUrl
             username = cpiUsername
             password = cpiPassword
             platformType = cloudPlatformType
+            loginPageUrl = "$project.loginPageUrl"
+            ssoUrl = "$project.ssoUrl"
+            oauthTokenUrl = "$project.oauthTokenUrl"
+            authenticationType = "$project.authenticationType"
+            publicApiClientId = "$project.publicApiClientId"
+            publicApiClientSecret = "$project.publicApiClientSecret"
             waitForStartup = true
             sourceFilePath = "$project.projectDir".toString()
             uploadDraftVersion = true
             artifactType = "CPI_IFLOW"
+            httpClientsFactory = new com.figaf.integration.common.factory.HttpClientsFactory(
+                project.hasProperty('connectionSettings.useProxyForConnections') ? project.property('connectionSettings.useProxyForConnections').toBoolean() : false,
+                project.hasProperty('connectionSettings.connectionRequestTimeout') ? project.property('connectionSettings.connectionRequestTimeout').toInteger() : 300000,
+                project.hasProperty('connectionSettings.connectTimeout') ? project.property('connectionSettings.connectTimeout').toInteger() : 300000,
+                project.hasProperty('connectionSettings.socketTimeout') ? project.property('connectionSettings.socketTimeout').toInteger() : 300000
+            )
         }
 
     } else if (sub.name.startsWith("vm-")) {
@@ -104,10 +133,56 @@ configure(subprojects.findAll()) { sub ->
             username = cpiUsername
             password = cpiPassword
             platformType = cloudPlatformType
+            loginPageUrl = "$project.loginPageUrl"
+            ssoUrl = "$project.ssoUrl"
+            oauthTokenUrl = "$project.oauthTokenUrl"
+            authenticationType = "$project.authenticationType"
+            publicApiClientId = "$project.publicApiClientId"
+            publicApiClientSecret = "$project.publicApiClientSecret"
             waitForStartup = true
             sourceFilePath = "$project.projectDir".toString()
             uploadDraftVersion = true
             artifactType = "VALUE_MAPPING"
+        }
+    } else if (sub.name.startsWith("sc-")) {
+
+        apply plugin: 'com.figaf.cpi-plugin'
+
+        cpiPlugin {
+            url = cpiUrl
+            username = cpiUsername
+            password = cpiPassword
+            platformType = cloudPlatformType
+            loginPageUrl = "$project.loginPageUrl"
+            ssoUrl = "$project.ssoUrl"
+            oauthTokenUrl = "$project.oauthTokenUrl"
+            authenticationType = "$project.authenticationType"
+            publicApiClientId = "$project.publicApiClientId"
+            publicApiClientSecret = "$project.publicApiClientSecret"
+            waitForStartup = true
+            sourceFilePath = "$project.projectDir".toString()
+            uploadDraftVersion = true
+            artifactType = "SCRIPT_COLLECTION"
+        }
+    } else if (sub.name.startsWith("mm-")) {
+
+        apply plugin: 'com.figaf.cpi-plugin'
+
+        cpiPlugin {
+            url = cpiUrl
+            username = cpiUsername
+            password = cpiPassword
+            platformType = cloudPlatformType
+            loginPageUrl = "$project.loginPageUrl"
+            ssoUrl = "$project.ssoUrl"
+            oauthTokenUrl = "$project.oauthTokenUrl"
+            authenticationType = "$project.authenticationType"
+            publicApiClientId = "$project.publicApiClientId"
+            publicApiClientSecret = "$project.publicApiClientSecret"
+            waitForStartup = true
+            sourceFilePath = "$project.projectDir".toString()
+            uploadDraftVersion = true
+            artifactType = "CPI_MESSAGE_MAPPING"
         }
     }
 }
