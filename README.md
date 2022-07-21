@@ -96,9 +96,9 @@ rootProject
 ├── build.gradle
 └── gradle.properties
 ```
-NOTE: If you have old project structure then set `false` value to doSeparateByTypes property to continue use old structure. 
+NOTE: If you have old project structure then set `false` value to useSeparateFolderForEachArtifactType property to continue use old structure. 
 If you want to use new structure follow these steps, new structure allows processing artifacts with different types and the same names.
-1) Set `true` value to doSeparateByTypes property.
+1) Set `true` value to useSeparateFolderForEachArtifactType property.
 2) Move move-artifacts script from scripts_of_updating_repository folder to project folder and run it.
 3) Compile UpdateSettingsGradle.java and run it with one argument - absolute path to settings.gradle file.
 
@@ -170,7 +170,7 @@ configure(subprojects.findAll()) { sub ->
             sourceFilePath = "$project.projectDir".toString()
             uploadDraftVersion = true
             artifactType = "CPI_IFLOW"
-            doSeparateByTypes = true
+            useSeparateFolderForEachArtifactType = true
             httpClientsFactory = new com.figaf.integration.common.factory.HttpClientsFactory(
                 project.hasProperty('connectionSettings.useProxyForConnections') ? project.property('connectionSettings.useProxyForConnections').toBoolean() : false,
                 project.hasProperty('connectionSettings.connectionRequestTimeout') ? project.property('connectionSettings.connectionRequestTimeout').toInteger() : 300000,
@@ -198,7 +198,7 @@ configure(subprojects.findAll()) { sub ->
             sourceFilePath = "$project.projectDir".toString()
             uploadDraftVersion = true
             artifactType = "VALUE_MAPPING"
-            doSeparateByTypes = true
+            useSeparateFolderForEachArtifactType = true
         }
     } else if (sub.name.startsWith("sc-")) {
 
@@ -219,7 +219,7 @@ configure(subprojects.findAll()) { sub ->
             sourceFilePath = "$project.projectDir".toString()
             uploadDraftVersion = true
             artifactType = "SCRIPT_COLLECTION"
-            doSeparateByTypes = true
+            useSeparateFolderForEachArtifactType = true
         }
     } else if (sub.name.startsWith("mm-")) {
 
@@ -240,7 +240,7 @@ configure(subprojects.findAll()) { sub ->
             sourceFilePath = "$project.projectDir".toString()
             uploadDraftVersion = true
             artifactType = "CPI_MESSAGE_MAPPING"
-            doSeparateByTypes = true
+            useSeparateFolderForEachArtifactType = true
         }
     }
 }
@@ -323,4 +323,4 @@ The plugin always adds to this list the following paths: `src/test`, `build.grad
 the number from MANIFEST file. Default value: `false`.
 * `httpClientsFactory` - configuration for http requests. Its constructor has the following parameters: `useProxyForConnections`, `connectionRequestTimeout`, `connectTimeout`, `socketTimeout`.
 If not provided it will use the following default values: `false`, `300000`, `300000`, `300000`.
-* `doSeparateByTypes`* - if true then package folder should contain types folders with artifacts, if false then package folder should contain only artifacts. Default value: `false`.
+* `useSeparateFolderForEachArtifactType`* - if true then package folder should contain types folders with artifacts, if false then package folder should contain only artifacts. Default value: `false`.

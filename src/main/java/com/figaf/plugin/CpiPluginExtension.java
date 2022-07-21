@@ -54,7 +54,7 @@ public class CpiPluginExtension {
 
     private final Property<HttpClientsFactory> httpClientsFactory;
 
-    private final Property<Boolean> doSeparateByTypes;
+    private final Property<Boolean> useSeparateFolderForEachArtifactType;
 
     public CpiPluginExtension(Project project) {
         this.url = project.getObjects().property(String.class);
@@ -77,6 +77,6 @@ public class CpiPluginExtension {
         this.uploadDraftVersion = project.getObjects().property(Boolean.class);
         this.artifactType = project.getObjects().property(String.class);
         this.httpClientsFactory = project.getObjects().property(HttpClientsFactory.class);
-        this.doSeparateByTypes = project.getObjects().property(Boolean.class);
+        this.useSeparateFolderForEachArtifactType = project.getObjects().property(Boolean.class);
     }
 }

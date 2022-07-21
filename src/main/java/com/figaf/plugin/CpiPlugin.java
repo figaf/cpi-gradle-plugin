@@ -37,46 +37,46 @@ public class CpiPlugin implements Plugin<Project> {
             applyExtension(downloadArtifact, extension, "Downloads artifact bundled model from CPI and unpacks it to module folder."));
     }
 
-    private void applyExtension(AbstractArtifactTask abstractartifactTask, CpiPluginExtension extension, String taskDescription) {
+    private void applyExtension(AbstractArtifactTask abstractArtifactTask, CpiPluginExtension extension, String taskDescription) {
         try {
-            abstractartifactTask.setGroup("cpi-plugin");
-            abstractartifactTask.setDescription(taskDescription);
-            abstractartifactTask.setUrl(extension.getUrl().getOrNull());
-            abstractartifactTask.setUsername(extension.getUsername().getOrNull());
-            abstractartifactTask.setPassword(extension.getPassword().getOrNull());
+            abstractArtifactTask.setGroup("cpi-plugin");
+            abstractArtifactTask.setDescription(taskDescription);
+            abstractArtifactTask.setUrl(extension.getUrl().getOrNull());
+            abstractArtifactTask.setUsername(extension.getUsername().getOrNull());
+            abstractArtifactTask.setPassword(extension.getPassword().getOrNull());
             String cpiPlatformTypeString = extension.getPlatformType().getOrNull();
             if (StringUtils.isNotEmpty(cpiPlatformTypeString)) {
-                abstractartifactTask.setPlatformType(CloudPlatformType.valueOf(cpiPlatformTypeString));
+                abstractArtifactTask.setPlatformType(CloudPlatformType.valueOf(cpiPlatformTypeString));
             } else {
-                abstractartifactTask.setPlatformType(CloudPlatformType.NEO);
+                abstractArtifactTask.setPlatformType(CloudPlatformType.NEO);
             }
-            abstractartifactTask.setSourceFilePath(extension.getSourceFilePath().getOrNull());
+            abstractArtifactTask.setSourceFilePath(extension.getSourceFilePath().getOrNull());
 
-            abstractartifactTask.setLoginPageUrl(extension.getLoginPageUrl().getOrNull());
-            abstractartifactTask.setSsoUrl(extension.getSsoUrl().getOrNull());
-            abstractartifactTask.setOauthTokenUrl(extension.getOauthTokenUrl().getOrNull());
+            abstractArtifactTask.setLoginPageUrl(extension.getLoginPageUrl().getOrNull());
+            abstractArtifactTask.setSsoUrl(extension.getSsoUrl().getOrNull());
+            abstractArtifactTask.setOauthTokenUrl(extension.getOauthTokenUrl().getOrNull());
             String authenticationTypeString = extension.getAuthenticationType().getOrNull();
             if (StringUtils.isNotEmpty(authenticationTypeString)) {
-                abstractartifactTask.setAuthenticationType(AuthenticationType.valueOf(authenticationTypeString));
+                abstractArtifactTask.setAuthenticationType(AuthenticationType.valueOf(authenticationTypeString));
             } else {
-                abstractartifactTask.setAuthenticationType(AuthenticationType.BASIC);
+                abstractArtifactTask.setAuthenticationType(AuthenticationType.BASIC);
             }
-            abstractartifactTask.setPublicApiClientId(extension.getPublicApiClientId().getOrNull());
-            abstractartifactTask.setPublicApiClientSecret(extension.getPublicApiClientSecret().getOrNull());
+            abstractArtifactTask.setPublicApiClientId(extension.getPublicApiClientId().getOrNull());
+            abstractArtifactTask.setPublicApiClientSecret(extension.getPublicApiClientSecret().getOrNull());
 
-            abstractartifactTask.setPackageTechnicalName(extension.getPackageTechnicalName().getOrNull());
-            abstractartifactTask.setPackageExternalId(extension.getPackageExternalId().getOrNull());
-            abstractartifactTask.setArtifactTechnicalName(extension.getArtifactTechnicalName().getOrNull());
-            abstractartifactTask.setArtifactExternalId(extension.getArtifactExternalId().getOrNull());
+            abstractArtifactTask.setPackageTechnicalName(extension.getPackageTechnicalName().getOrNull());
+            abstractArtifactTask.setPackageExternalId(extension.getPackageExternalId().getOrNull());
+            abstractArtifactTask.setArtifactTechnicalName(extension.getArtifactTechnicalName().getOrNull());
+            abstractArtifactTask.setArtifactExternalId(extension.getArtifactExternalId().getOrNull());
             SetProperty<String> ignoreFilesListProperty = extension.getIgnoreFilesList();
             Set<String> ignoreFilesList = new HashSet<>();
             if (ignoreFilesListProperty != null && ignoreFilesListProperty.isPresent()) {
                 ignoreFilesList.addAll(ignoreFilesListProperty.get());
             }
-            abstractartifactTask.setIgnoreFilesList(ignoreFilesList);
-            abstractartifactTask.setArtifactType(ArtifactType.valueOf(extension.getArtifactType().getOrNull()));
-            abstractartifactTask.setHttpClientsFactory(extension.getHttpClientsFactory().getOrElse(new HttpClientsFactory()));
-            abstractartifactTask.setDoSeparateByTypes(extension.getDoSeparateByTypes().getOrElse(false));
+            abstractArtifactTask.setIgnoreFilesList(ignoreFilesList);
+            abstractArtifactTask.setArtifactType(ArtifactType.valueOf(extension.getArtifactType().getOrNull()));
+            abstractArtifactTask.setHttpClientsFactory(extension.getHttpClientsFactory().getOrElse(new HttpClientsFactory()));
+            abstractArtifactTask.setUseSeparateFolderForEachArtifactType(extension.getUseSeparateFolderForEachArtifactType().getOrElse(false));
         } catch (Exception ex) {
             ex.printStackTrace();
             throw ex;
