@@ -70,6 +70,9 @@ public abstract class AbstractArtifactTask extends DefaultTask {
     @Input
     protected HttpClientsFactory httpClientsFactory;
 
+    @Input
+    protected boolean useSeparateFolderForEachArtifactType;
+
     protected String artifactExternalId;
 
     protected String packageExternalId;
@@ -135,7 +138,10 @@ public abstract class AbstractArtifactTask extends DefaultTask {
 
         sourceFolder = new File(sourceFilePath);
 
-        if (packageTechnicalName == null && artifactTechnicalName == null) {
+        if (packageTechnicalName == null && artifactTechnicalName == null && useSeparateFolderForEachArtifactType) {
+            packageTechnicalName = sourceFolder.getParentFile().getParentFile().getName();
+            artifactTechnicalName = sourceFolder.getName();
+        } else if (packageTechnicalName == null && artifactTechnicalName == null) {
             packageTechnicalName = sourceFolder.getParentFile().getName();
             artifactTechnicalName = sourceFolder.getName();
         }
