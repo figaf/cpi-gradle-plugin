@@ -41,6 +41,14 @@ public abstract class AbstractArtifactTask extends DefaultTask {
     protected String ssoUrl;
 
     @Input
+    protected boolean useCustomIdp;
+
+    @Input
+    protected String samlUrl;
+
+    @Input
+    protected String idpName;
+    @Input
     protected String oauthTokenUrl;
 
     @Input
@@ -131,6 +139,9 @@ public abstract class AbstractArtifactTask extends DefaultTask {
         requestContext.setRestTemplateWrapperKey("");
         requestContext.setLoginPageUrl(loginPageUrl);
         requestContext.setSsoUrl(ssoUrl);
+        requestContext.setUseCustomIdp(useCustomIdp);
+        requestContext.setSamlUrl(samlUrl);
+        requestContext.setIdpName(idpName);
         requestContext.setOauthUrl(oauthTokenUrl);
         requestContext.setAuthenticationType(authenticationType);
         requestContext.setClientId(publicApiClientId);
@@ -189,6 +200,9 @@ public abstract class AbstractArtifactTask extends DefaultTask {
 
         System.out.println("loginPageUrl = " + loginPageUrl);
         System.out.println("ssoUrl = " + ssoUrl);
+        System.out.println("useCustomIdp = " + useCustomIdp);
+        System.out.println("samlUrl = " + samlUrl);
+        System.out.println("idpName = " + idpName);
         System.out.println("oauthTokenUrl = " + oauthTokenUrl);
         System.out.println("authenticationType = " + authenticationType);
         System.out.println("publicApiClientId = " + publicApiClientId);

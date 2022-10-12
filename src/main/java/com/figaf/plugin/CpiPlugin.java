@@ -54,6 +54,9 @@ public class CpiPlugin implements Plugin<Project> {
 
             abstractArtifactTask.setLoginPageUrl(extension.getLoginPageUrl().getOrNull());
             abstractArtifactTask.setSsoUrl(extension.getSsoUrl().getOrNull());
+            abstractArtifactTask.setUseCustomIdp(extension.getUseCustomIdp().getOrElse(false));
+            abstractArtifactTask.setSamlUrl(extension.getSamlUrl().getOrNull());
+            abstractArtifactTask.setIdpName(extension.getIdpName().getOrNull());
             abstractArtifactTask.setOauthTokenUrl(extension.getOauthTokenUrl().getOrNull());
             String authenticationTypeString = extension.getAuthenticationType().getOrNull();
             if (StringUtils.isNotEmpty(authenticationTypeString)) {
