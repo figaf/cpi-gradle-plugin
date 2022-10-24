@@ -120,7 +120,7 @@ buildscript {
 }
 
 plugins {
-    id 'com.figaf.cpi-plugin' version '2.10.RELEASE' apply false
+    id 'com.figaf.cpi-plugin' version '2.11.RELEASE' apply false
 }
 
 configure(subprojects.findAll()) { sub ->
@@ -162,8 +162,14 @@ configure(subprojects.findAll()) { sub ->
             platformType = cloudPlatformType
             loginPageUrl = "$project.loginPageUrl"
             ssoUrl = "$project.ssoUrl"
+            useCustomIdp = "$project.useCustomIdp".toBoolean()
+            samlUrl = "$project.samlUrl"
+            idpName = "$project.idpName"
+            idpApiClientId = "$project.idpApiClientId"
+            idpApiClientSecret = "$project.idpApiClientSecret"
             oauthTokenUrl = "$project.oauthTokenUrl"
             authenticationType = "$project.authenticationType"
+            publicApiUrl = "$project.publicApiUrl"
             publicApiClientId = "$project.publicApiClientId"
             publicApiClientSecret = "$project.publicApiClientSecret"
             waitForStartup = true
@@ -190,8 +196,14 @@ configure(subprojects.findAll()) { sub ->
             platformType = cloudPlatformType
             loginPageUrl = "$project.loginPageUrl"
             ssoUrl = "$project.ssoUrl"
+            useCustomIdp = "$project.useCustomIdp".toBoolean()
+            samlUrl = "$project.samlUrl"
+            idpName = "$project.idpName"
+            idpApiClientId = "$project.idpApiClientId"
+            idpApiClientSecret = "$project.idpApiClientSecret"
             oauthTokenUrl = "$project.oauthTokenUrl"
             authenticationType = "$project.authenticationType"
+            publicApiUrl = "$project.publicApiUrl"
             publicApiClientId = "$project.publicApiClientId"
             publicApiClientSecret = "$project.publicApiClientSecret"
             waitForStartup = true
@@ -211,8 +223,14 @@ configure(subprojects.findAll()) { sub ->
             platformType = cloudPlatformType
             loginPageUrl = "$project.loginPageUrl"
             ssoUrl = "$project.ssoUrl"
+            useCustomIdp = "$project.useCustomIdp".toBoolean()
+            samlUrl = "$project.samlUrl"
+            idpName = "$project.idpName"
+            idpApiClientId = "$project.idpApiClientId"
+            idpApiClientSecret = "$project.idpApiClientSecret"
             oauthTokenUrl = "$project.oauthTokenUrl"
             authenticationType = "$project.authenticationType"
+            publicApiUrl = "$project.publicApiUrl"
             publicApiClientId = "$project.publicApiClientId"
             publicApiClientSecret = "$project.publicApiClientSecret"
             waitForStartup = true
@@ -232,8 +250,14 @@ configure(subprojects.findAll()) { sub ->
             platformType = cloudPlatformType
             loginPageUrl = "$project.loginPageUrl"
             ssoUrl = "$project.ssoUrl"
+            useCustomIdp = "$project.useCustomIdp".toBoolean()
+            samlUrl = "$project.samlUrl"
+            idpName = "$project.idpName"
+            idpApiClientId = "$project.idpApiClientId"
+            idpApiClientSecret = "$project.idpApiClientSecret"
             oauthTokenUrl = "$project.oauthTokenUrl"
             authenticationType = "$project.authenticationType"
+            publicApiUrl = "$project.publicApiUrl"
             publicApiClientId = "$project.publicApiClientId"
             publicApiClientSecret = "$project.publicApiClientSecret"
             waitForStartup = true
