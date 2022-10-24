@@ -9,6 +9,7 @@ import com.figaf.integration.cpi.entity.designtime_artifacts.IntegrationPackage;
 import com.figaf.plugin.enumeration.ArtifactType;
 import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
@@ -60,6 +61,9 @@ public abstract class AbstractArtifactTask extends DefaultTask {
 
     @Input
     protected AuthenticationType authenticationType;
+
+    @Input
+    protected String publicApiUrl;
 
     @Input
     protected String publicApiClientId;
@@ -128,9 +132,23 @@ public abstract class AbstractArtifactTask extends DefaultTask {
     protected abstract void doTaskAction() throws Exception;
 
     protected void defineParameters(boolean checkObjectsExistence) {
-        cpiConnectionProperties = new ConnectionProperties(url, username, password);
+        if (StringUtils.isNotEmpty(publicApiUrl)) {
+            cpiConnectionProperties = new ConnectionProperties(publicApiUrl, username, password);
+        } else {
+            cpiConnectionProperties = new ConnectionProperties(url, username, password);
+        }
         System.out.println("cpiConnectionProperties = " + cpiConnectionProperties);
         System.out.println("httpClientsFactory = " + httpClientsFactory);
+        System.out.println("loginPageUrl = " + loginPageUrl);
+        System.out.println("ssoUrl = " + ssoUrl);
+        System.out.println("useCustomIdp = " + useCustomIdp);
+        System.out.println("samlUrl = " + samlUrl);
+        System.out.println("idpName = " + idpName);
+        System.out.println("idpApiClientId = " + idpApiClientId);
+        System.out.println("oauthTokenUrl = " + oauthTokenUrl);
+        System.out.println("authenticationType = " + authenticationType);
+        System.out.println("publicApiUrl = " + publicApiUrl);
+        System.out.println("publicApiClientId = " + publicApiClientId);
 
         this.integrationPackageClient = new IntegrationPackageClient(httpClientsFactory);
         this.cpiIntegrationFlowClient = new CpiIntegrationFlowClient(integrationPackageClient, httpClientsFactory);
@@ -207,15 +225,6 @@ public abstract class AbstractArtifactTask extends DefaultTask {
         System.out.println("deployedBundleVersion = " + deployedBundleVersion);
         System.out.println("ignoreFilesList = " + ignoreFilesList);
 
-        System.out.println("loginPageUrl = " + loginPageUrl);
-        System.out.println("ssoUrl = " + ssoUrl);
-        System.out.println("useCustomIdp = " + useCustomIdp);
-        System.out.println("samlUrl = " + samlUrl);
-        System.out.println("idpName = " + idpName);
-        System.out.println("idpApiClientId = " + idpApiClientId);
-        System.out.println("oauthTokenUrl = " + oauthTokenUrl);
-        System.out.println("authenticationType = " + authenticationType);
-        System.out.println("publicApiClientId = " + publicApiClientId);
     }
 
 

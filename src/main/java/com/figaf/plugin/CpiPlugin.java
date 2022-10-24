@@ -66,6 +66,7 @@ public class CpiPlugin implements Plugin<Project> {
             } else {
                 abstractArtifactTask.setAuthenticationType(AuthenticationType.BASIC);
             }
+            abstractArtifactTask.setPublicApiUrl(extension.getPublicApiUrl().getOrNull());
             abstractArtifactTask.setPublicApiClientId(extension.getPublicApiClientId().getOrNull());
             abstractArtifactTask.setPublicApiClientSecret(extension.getPublicApiClientSecret().getOrNull());
 
