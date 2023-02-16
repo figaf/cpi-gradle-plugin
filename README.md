@@ -164,6 +164,7 @@ configure(subprojects.findAll()) { sub ->
             ssoUrl = "$project.ssoUrl"
             useCustomIdp = "$project.useCustomIdp".toBoolean()
             samlUrl = "$project.samlUrl"
+            figafAgentId = "$project.figafAgentId"
             idpName = "$project.idpName"
             idpApiClientId = "$project.idpApiClientId"
             idpApiClientSecret = "$project.idpApiClientSecret"
@@ -198,6 +199,7 @@ configure(subprojects.findAll()) { sub ->
             ssoUrl = "$project.ssoUrl"
             useCustomIdp = "$project.useCustomIdp".toBoolean()
             samlUrl = "$project.samlUrl"
+            figafAgentId = "$project.figafAgentId"
             idpName = "$project.idpName"
             idpApiClientId = "$project.idpApiClientId"
             idpApiClientSecret = "$project.idpApiClientSecret"
@@ -225,6 +227,7 @@ configure(subprojects.findAll()) { sub ->
             ssoUrl = "$project.ssoUrl"
             useCustomIdp = "$project.useCustomIdp".toBoolean()
             samlUrl = "$project.samlUrl"
+            figafAgentId = "$project.figafAgentId"
             idpName = "$project.idpName"
             idpApiClientId = "$project.idpApiClientId"
             idpApiClientSecret = "$project.idpApiClientSecret"
@@ -252,6 +255,7 @@ configure(subprojects.findAll()) { sub ->
             ssoUrl = "$project.ssoUrl"
             useCustomIdp = "$project.useCustomIdp".toBoolean()
             samlUrl = "$project.samlUrl"
+            figafAgentId = "$project.figafAgentId"
             idpName = "$project.idpName"
             idpApiClientId = "$project.idpApiClientId"
             idpApiClientSecret = "$project.idpApiClientSecret"
