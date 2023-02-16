@@ -32,6 +32,8 @@ public class CpiPluginExtension {
 
     private final Property<String> samlUrl;
 
+    private final Property<String> figafAgentId;
+
     private final Property<String> idpName;
 
     private final Property<String> idpApiClientId;
@@ -78,6 +80,7 @@ public class CpiPluginExtension {
         this.ssoUrl = project.getObjects().property(String.class);
         this.useCustomIdp = project.getObjects().property(Boolean.class);
         this.samlUrl = project.getObjects().property(String.class);
+        this.figafAgentId = project.getObjects().property(String.class);
         this.idpName = project.getObjects().property(String.class);
         this.idpApiClientId = project.getObjects().property(String.class);
         this.idpApiClientSecret = project.getObjects().property(String.class);

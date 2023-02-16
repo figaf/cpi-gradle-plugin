@@ -48,6 +48,9 @@ public abstract class AbstractArtifactTask extends DefaultTask {
     protected String samlUrl;
 
     @Input
+    protected String figafAgentId;
+
+    @Input
     protected String idpName;
 
     @Input
@@ -143,6 +146,7 @@ public abstract class AbstractArtifactTask extends DefaultTask {
         System.out.println("ssoUrl = " + ssoUrl);
         System.out.println("useCustomIdp = " + useCustomIdp);
         System.out.println("samlUrl = " + samlUrl);
+        System.out.println("figafAgentId = " + figafAgentId);
         System.out.println("idpName = " + idpName);
         System.out.println("idpApiClientId = " + idpApiClientId);
         System.out.println("oauthTokenUrl = " + oauthTokenUrl);
@@ -166,6 +170,7 @@ public abstract class AbstractArtifactTask extends DefaultTask {
         requestContext.setSsoUrl(ssoUrl);
         requestContext.setUseCustomIdp(useCustomIdp);
         requestContext.setSamlUrl(samlUrl);
+        requestContext.setFigafAgentId(figafAgentId);
         requestContext.setIdpName(idpName);
         requestContext.setIdpApiClientId(idpApiClientId);
         requestContext.setIdpApiClientSecret(idpApiClientSecret);

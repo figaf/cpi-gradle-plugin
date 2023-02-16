@@ -56,6 +56,7 @@ public class CpiPlugin implements Plugin<Project> {
             abstractArtifactTask.setSsoUrl(extension.getSsoUrl().getOrNull());
             abstractArtifactTask.setUseCustomIdp(extension.getUseCustomIdp().getOrElse(false));
             abstractArtifactTask.setSamlUrl(extension.getSamlUrl().getOrNull());
+            abstractArtifactTask.setFigafAgentId(extension.getFigafAgentId().getOrNull());
             abstractArtifactTask.setIdpName(extension.getIdpName().getOrNull());
             abstractArtifactTask.setIdpApiClientId(extension.getIdpApiClientId().getOrNull());
             abstractArtifactTask.setIdpApiClientSecret(extension.getIdpApiClientSecret().getOrNull());
