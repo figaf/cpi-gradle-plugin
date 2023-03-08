@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'com.figaf'
-version = '2.12.RELEASE'
+version = '2.13.RELEASE'
 
 repositories {
     mavenCentral()
@@ -31,7 +31,7 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.8'
     annotationProcessor 'org.projectlombok:lombok:1.18.8'
 
-    compile 'com.github.figaf:cpi-api:2.10'
+    compile 'com.github.figaf:cpi-api:2.13'
     compile 'com.github.figaf:integration-commons:1.17'
     compile 'org.zeroturnaround:zt-zip:1.13'
     compile 'com.squareup.okhttp3:okhttp:4.0.0'

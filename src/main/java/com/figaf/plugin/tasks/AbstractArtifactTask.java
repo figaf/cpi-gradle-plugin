@@ -155,10 +155,10 @@ public abstract class AbstractArtifactTask extends DefaultTask {
         System.out.println("publicApiClientId = " + publicApiClientId);
 
         this.integrationPackageClient = new IntegrationPackageClient(httpClientsFactory);
-        this.cpiIntegrationFlowClient = new CpiIntegrationFlowClient(integrationPackageClient, httpClientsFactory);
-        this.cpiValueMappingClient = new CpiValueMappingClient(integrationPackageClient, httpClientsFactory);
-        this.cpiScriptCollectionClient = new CpiScriptCollectionClient(integrationPackageClient, httpClientsFactory);
-        this.cpiMessageMappingClient = new CpiMessageMappingClient(integrationPackageClient, httpClientsFactory);
+        this.cpiIntegrationFlowClient = new CpiIntegrationFlowClient(httpClientsFactory);
+        this.cpiValueMappingClient = new CpiValueMappingClient(httpClientsFactory);
+        this.cpiScriptCollectionClient = new CpiScriptCollectionClient(httpClientsFactory);
+        this.cpiMessageMappingClient = new CpiMessageMappingClient(httpClientsFactory);
         this.integrationContentClient = new IntegrationContentClient(httpClientsFactory);
 
         requestContext = new RequestContext();
