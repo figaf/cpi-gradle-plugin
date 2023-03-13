@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'com.figaf'
-version = '2.13.RELEASE'
+version = '2.14.RELEASE'
 
 repositories {
     mavenCentral()
