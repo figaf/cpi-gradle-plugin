@@ -224,6 +224,7 @@ public abstract class AbstractArtifactTask extends DefaultTask {
         ignoreFilesList.add("gradle.properties");
         ignoreFilesList.add("settings.gradle");
         ignoreFilesList.add("Documentation.xlsx");
+        ignoreFilesList.add("pipeline-validation.txt");
 
         System.out.println("packageTechnicalName = " + packageTechnicalName);
         System.out.println("packageExternalId = " + packageExternalId);
