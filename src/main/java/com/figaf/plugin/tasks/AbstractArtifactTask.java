@@ -153,6 +153,7 @@ public abstract class AbstractArtifactTask extends DefaultTask {
         System.out.println("authenticationType = " + authenticationType);
         System.out.println("publicApiUrl = " + publicApiUrl);
         System.out.println("publicApiClientId = " + publicApiClientId);
+        System.out.println("artifactType = " + artifactType);
 
         this.integrationPackageClient = new IntegrationPackageClient(httpClientsFactory);
         this.cpiIntegrationFlowClient = new CpiIntegrationFlowClient(httpClientsFactory);
