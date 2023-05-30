@@ -153,6 +153,7 @@ public abstract class AbstractArtifactTask extends DefaultTask {
         System.out.println("authenticationType = " + authenticationType);
         System.out.println("publicApiUrl = " + publicApiUrl);
         System.out.println("publicApiClientId = " + publicApiClientId);
+        System.out.println("artifactType = " + artifactType);
 
         this.integrationPackageClient = new IntegrationPackageClient(httpClientsFactory);
         this.cpiIntegrationFlowClient = new CpiIntegrationFlowClient(httpClientsFactory);
@@ -223,6 +224,7 @@ public abstract class AbstractArtifactTask extends DefaultTask {
         ignoreFilesList.add("gradle.properties");
         ignoreFilesList.add("settings.gradle");
         ignoreFilesList.add("Documentation.xlsx");
+        ignoreFilesList.add("pipeline-validation.txt");
 
         System.out.println("packageTechnicalName = " + packageTechnicalName);
         System.out.println("packageExternalId = " + packageExternalId);
