@@ -1,7 +1,6 @@
 package com.figaf.plugin.tasks;
 
 import com.figaf.integration.cpi.entity.designtime_artifacts.*;
-import com.figaf.plugin.enumeration.ArtifactType;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +24,7 @@ import java.util.*;
 import java.util.jar.Manifest;
 import java.util.regex.Pattern;
 
-import static com.figaf.plugin.enumeration.ArtifactType.*;
+import static com.figaf.integration.cpi.entity.designtime_artifacts.CpiArtifactType.*;
 import static java.lang.String.format;
 
 /**
@@ -38,12 +37,13 @@ public class UploadArtifact extends AbstractArtifactTask {
 
     private static final Pattern NS_ELEMENT_WITHOUT_PREFIX_PATTERN = Pattern.compile("(?<!./)/([\\w-_.]+)(?!\\w*:)");
     private static final Pattern NS_ELEMENT_WITH_PREFIX_PATTERN = Pattern.compile("/(\\w+):([\\w-_.]+)");
-    private static final Map<ArtifactType, String> ARTIFACT_TYPE_TO_PREFIX_MAP = new HashMap<>();
+    private static final Map<CpiArtifactType, String> ARTIFACT_TYPE_TO_PREFIX_MAP = new HashMap<>();
     static {
-        ARTIFACT_TYPE_TO_PREFIX_MAP.put(CPI_IFLOW, "iflow");
+        ARTIFACT_TYPE_TO_PREFIX_MAP.put(IFLOW, "iflow");
         ARTIFACT_TYPE_TO_PREFIX_MAP.put(VALUE_MAPPING, "vm");
         ARTIFACT_TYPE_TO_PREFIX_MAP.put(SCRIPT_COLLECTION, "sc");
-        ARTIFACT_TYPE_TO_PREFIX_MAP.put(CPI_MESSAGE_MAPPING, "mm");
+        ARTIFACT_TYPE_TO_PREFIX_MAP.put(MESSAGE_MAPPING, "mm");
+        ARTIFACT_TYPE_TO_PREFIX_MAP.put(FUNCTION_LIBRARIES, "fl");
     }
 
     @Getter
@@ -79,7 +79,7 @@ public class UploadArtifact extends AbstractArtifactTask {
 
     private void createArtifact(CreateOrUpdateCpiArtifactRequest uploadArtifactRequest) {
         switch (artifactType) {
-            case CPI_IFLOW:
+            case IFLOW:
                 cpiIntegrationFlowClient.createIFlow(requestContext, (CreateIFlowRequest) uploadArtifactRequest);
                 break;
             case VALUE_MAPPING:
@@ -91,36 +91,23 @@ public class UploadArtifact extends AbstractArtifactTask {
                      (CreateScriptCollectionRequest) uploadArtifactRequest
                  );
                 break;
-            case CPI_MESSAGE_MAPPING:
+            case MESSAGE_MAPPING:
                 cpiMessageMappingClient.createMessageMapping(
                     requestContext,
                     (CreateMessageMappingRequest) uploadArtifactRequest
+                );
+                break;
+            case FUNCTION_LIBRARIES:
+                cpiFunctionLibrariesClient.createFunctionLibraries(
+                    requestContext,
+                    (CreateFunctionLibrariesRequest) uploadArtifactRequest
                 );
                 break;
         }
     }
 
     private void updateArtifact(CreateOrUpdateCpiArtifactRequest uploadArtifactRequest) {
-        switch (artifactType) {
-            case CPI_IFLOW:
-                cpiIntegrationFlowClient.updateIFlow(requestContext, (UpdateIFlowRequest) uploadArtifactRequest);
-                break;
-            case VALUE_MAPPING:
-                cpiValueMappingClient.updateValueMapping(requestContext, (UpdateValueMappingRequest) uploadArtifactRequest);
-                break;
-            case SCRIPT_COLLECTION:
-                cpiScriptCollectionClient.updateScriptCollection(
-                    requestContext,
-                    (UpdateScriptCollectionRequest) uploadArtifactRequest
-                );
-                break;
-            case CPI_MESSAGE_MAPPING:
-                cpiMessageMappingClient.updateMessageMapping(
-                    requestContext,
-                    (UpdateMessageMappingRequest) uploadArtifactRequest
-                );
-                break;
-        }
+        cpiRuntimeArtifactClient.updateArtifact(requestContext, uploadArtifactRequest);
     }
 
     private CreateOrUpdateCpiArtifactRequest createRequest() {
@@ -135,7 +122,7 @@ public class UploadArtifact extends AbstractArtifactTask {
         CreateOrUpdateCpiArtifactRequest createRequest = null;
 
         switch (artifactType) {
-            case CPI_IFLOW:
+            case IFLOW:
                 createRequest = CreateIFlowRequest.builder().build();
                 break;
             case VALUE_MAPPING:
@@ -144,8 +131,11 @@ public class UploadArtifact extends AbstractArtifactTask {
             case SCRIPT_COLLECTION:
                 createRequest = CreateScriptCollectionRequest.builder().build();
                 break;
-            case CPI_MESSAGE_MAPPING:
-            createRequest = CreateMessageMappingRequest.builder().build();
+            case MESSAGE_MAPPING:
+                createRequest = CreateMessageMappingRequest.builder().build();
+                break;
+            case FUNCTION_LIBRARIES:
+                createRequest = CreateFunctionLibrariesRequest.builder().build();
                 break;
         }
 
@@ -153,24 +143,27 @@ public class UploadArtifact extends AbstractArtifactTask {
     }
 
     private CreateOrUpdateCpiArtifactRequest createUpdateRequest() {
-        CreateOrUpdateCpiArtifactRequest createRequest = null;
+        CreateOrUpdateCpiArtifactRequest updateRequest = null;
 
         switch (artifactType) {
-            case CPI_IFLOW:
-                createRequest = UpdateIFlowRequest.builder().build();
+            case IFLOW:
+                updateRequest = UpdateIFlowRequest.builder().build();
                 break;
             case VALUE_MAPPING:
-                createRequest = UpdateValueMappingRequest.builder().build();
+                updateRequest = UpdateValueMappingRequest.builder().build();
                 break;
             case SCRIPT_COLLECTION:
-                createRequest = UpdateScriptCollectionRequest.builder().build();
+                updateRequest = UpdateScriptCollectionRequest.builder().build();
                 break;
-            case CPI_MESSAGE_MAPPING:
-                createRequest = UpdateMessageMappingRequest.builder().build();
+            case MESSAGE_MAPPING:
+                updateRequest = UpdateMessageMappingRequest.builder().build();
+                break;
+            case FUNCTION_LIBRARIES:
+                updateRequest = UpdateFunctionLibrariesRequest.builder().build();
                 break;
         }
 
-        return createRequest;
+        return updateRequest;
     }
 
     private void fillUploadRequest(CreateOrUpdateCpiArtifactRequest uploadArtifactRequest, File directoryWithExcludedFiles) throws IOException {

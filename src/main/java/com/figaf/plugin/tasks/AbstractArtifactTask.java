@@ -3,10 +3,9 @@ package com.figaf.plugin.tasks;
 import com.figaf.integration.common.entity.*;
 import com.figaf.integration.common.factory.HttpClientsFactory;
 import com.figaf.integration.cpi.client.*;
-import com.figaf.integration.cpi.client.CpiMessageMappingClient;
 import com.figaf.integration.cpi.entity.designtime_artifacts.CpiArtifact;
+import com.figaf.integration.cpi.entity.designtime_artifacts.CpiArtifactType;
 import com.figaf.integration.cpi.entity.designtime_artifacts.IntegrationPackage;
-import com.figaf.plugin.enumeration.ArtifactType;
 import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -15,7 +14,9 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author Arsenii Istlentev
@@ -87,7 +88,7 @@ public abstract class AbstractArtifactTask extends DefaultTask {
     protected Set<String> ignoreFilesList;
 
     @Input
-    protected ArtifactType artifactType;
+    protected CpiArtifactType artifactType;
 
     @Input
     protected HttpClientsFactory httpClientsFactory;
@@ -116,6 +117,8 @@ public abstract class AbstractArtifactTask extends DefaultTask {
     protected CpiScriptCollectionClient cpiScriptCollectionClient;
 
     protected CpiMessageMappingClient cpiMessageMappingClient;
+    protected CpiFunctionLibrariesClient cpiFunctionLibrariesClient;
+    protected CpiRuntimeArtifactClient cpiRuntimeArtifactClient;
 
     protected IntegrationContentClient integrationContentClient;
 
@@ -160,6 +163,8 @@ public abstract class AbstractArtifactTask extends DefaultTask {
         this.cpiValueMappingClient = new CpiValueMappingClient(httpClientsFactory);
         this.cpiScriptCollectionClient = new CpiScriptCollectionClient(httpClientsFactory);
         this.cpiMessageMappingClient = new CpiMessageMappingClient(httpClientsFactory);
+        this.cpiFunctionLibrariesClient = new CpiFunctionLibrariesClient(httpClientsFactory);
+        this.cpiRuntimeArtifactClient = new CpiRuntimeArtifactClient(httpClientsFactory);
         this.integrationContentClient = new IntegrationContentClient(httpClientsFactory);
 
         requestContext = new RequestContext();
@@ -241,44 +246,16 @@ public abstract class AbstractArtifactTask extends DefaultTask {
         String packageTechnicalName,
         String packageExternalId,
         String artifactTechnicalName,
-        ArtifactType artifactType
+        CpiArtifactType artifactType
     ) {
 
-        List<CpiArtifact> artifactsInThePackage = new ArrayList<>();
-        switch (artifactType) {
-            case CPI_IFLOW:
-                artifactsInThePackage = cpiIntegrationFlowClient.getIFlowsByPackage(
-                    requestContext,
-                    packageTechnicalName,
-                    null,
-                    packageExternalId
-                );
-                break;
-            case VALUE_MAPPING:
-                artifactsInThePackage = cpiValueMappingClient.getValueMappingsByPackage(
-                    requestContext,
-                    packageTechnicalName,
-                    null,
-                    packageExternalId
-                );
-                break;
-            case SCRIPT_COLLECTION:
-                artifactsInThePackage = cpiScriptCollectionClient.getScriptCollectionsByPackage(
-                    requestContext,
-                    packageTechnicalName,
-                    null,
-                    packageExternalId
-                );
-                break;
-            case CPI_MESSAGE_MAPPING:
-                artifactsInThePackage = cpiMessageMappingClient.getMessageMappingsByPackage(
-                    requestContext,
-                    packageTechnicalName,
-                    null,
-                    packageExternalId
-                );
-                break;
-        }
+        List<CpiArtifact> artifactsInThePackage = cpiRuntimeArtifactClient.getArtifactsByPackage(
+            requestContext,
+            packageTechnicalName,
+            packageExternalId,
+            artifactTechnicalName,
+            artifactType
+        );
 
         CpiArtifact artifactCpiIntegrationObjectData = null;
 
