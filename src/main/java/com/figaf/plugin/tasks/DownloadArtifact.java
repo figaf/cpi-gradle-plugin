@@ -1,6 +1,5 @@
 package com.figaf.plugin.tasks;
 
-import com.figaf.plugin.enumeration.ArtifactType;
 import com.figaf.plugin.utils.XMLUtils;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +22,8 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+
+import static com.figaf.integration.cpi.entity.designtime_artifacts.CpiArtifactType.VALUE_MAPPING;
 
 /**
  * @author Arsenii Istlentev
@@ -64,7 +65,7 @@ public class DownloadArtifact extends AbstractArtifactTask {
             }
 
             byte[] bundledModel = downloadArtifact();
-            if (ArtifactType.VALUE_MAPPING.equals(artifactType)) {
+            if (VALUE_MAPPING.equals(artifactType)) {
                 FileUtils.writeByteArrayToFile(artifactZipArchiveFile, formatValueMapping(bundledModel));
             } else {
                 FileUtils.writeByteArrayToFile(artifactZipArchiveFile, bundledModel);
@@ -111,39 +112,10 @@ public class DownloadArtifact extends AbstractArtifactTask {
     }
 
     private byte[] downloadArtifact() {
-        byte[] bundledModel = null;
-
-        switch (artifactType) {
-            case CPI_IFLOW:
-                bundledModel = cpiIntegrationFlowClient.downloadIFlow(
-                    requestContext,
-                    packageExternalId,
-                    artifactExternalId
-                );
-                break;
-            case VALUE_MAPPING:
-                bundledModel = cpiValueMappingClient.downloadValueMapping(
-                    requestContext,
-                    packageExternalId,
-                    artifactExternalId
-                );
-                break;
-            case SCRIPT_COLLECTION:
-                bundledModel = cpiScriptCollectionClient.downloadScriptCollection(
-                    requestContext,
-                    packageExternalId,
-                    artifactExternalId
-                );
-                break;
-            case CPI_MESSAGE_MAPPING:
-                bundledModel = cpiMessageMappingClient.downloadMessageMapping(
-                    requestContext,
-                    packageExternalId,
-                    artifactExternalId
-                );
-                break;
-        }
-
-        return bundledModel;
+        return cpiRuntimeArtifactClient.downloadArtifact(
+            requestContext,
+            packageExternalId,
+            artifactExternalId
+        );
     }
 }
