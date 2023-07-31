@@ -81,7 +81,7 @@ public class DeployArtifact extends AbstractArtifactTask {
         String taskId = null;
 
         switch (artifactType) {
-            case CPI_IFLOW:
+            case IFLOW:
                 taskId = cpiIntegrationFlowClient.deployIFlow(
                     requestContext,
                     packageExternalId,
@@ -104,11 +104,19 @@ public class DeployArtifact extends AbstractArtifactTask {
                     artifactTechnicalName
                 );
                 break;
-            case CPI_MESSAGE_MAPPING:
+            case MESSAGE_MAPPING:
                 taskId = cpiMessageMappingClient.deployMessageMapping(
                     requestContext,
                     packageExternalId,
                     artifactExternalId
+                );
+                break;
+            case FUNCTION_LIBRARIES:
+                taskId = cpiFunctionLibrariesClient.deployFunctionLibraries(
+                    requestContext,
+                    packageExternalId,
+                    artifactExternalId,
+                    artifactTechnicalName
                 );
                 break;
         }
@@ -117,23 +125,6 @@ public class DeployArtifact extends AbstractArtifactTask {
     }
 
     private String getDeployStatus(String taskId) {
-        String deployStatus = null;
-
-        switch (artifactType) {
-            case CPI_IFLOW:
-                deployStatus = cpiIntegrationFlowClient.checkDeploymentStatus(requestContext, taskId);
-                break;
-            case VALUE_MAPPING:
-                deployStatus = cpiValueMappingClient.checkDeploymentStatus(requestContext, taskId);
-                break;
-            case SCRIPT_COLLECTION:
-                deployStatus = cpiScriptCollectionClient.checkDeploymentStatus(requestContext, taskId);
-                break;
-            case CPI_MESSAGE_MAPPING:
-                deployStatus = cpiMessageMappingClient.checkDeploymentStatus(requestContext, taskId);
-                break;
-        }
-
-        return deployStatus;
+        return cpiRuntimeArtifactClient.checkDeploymentStatus(requestContext, taskId);
     }
 }

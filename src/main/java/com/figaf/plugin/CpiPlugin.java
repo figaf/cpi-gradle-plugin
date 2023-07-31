@@ -3,8 +3,11 @@ package com.figaf.plugin;
 import com.figaf.integration.common.entity.AuthenticationType;
 import com.figaf.integration.common.entity.CloudPlatformType;
 import com.figaf.integration.common.factory.HttpClientsFactory;
-import com.figaf.plugin.enumeration.ArtifactType;
-import com.figaf.plugin.tasks.*;
+import com.figaf.integration.cpi.entity.designtime_artifacts.CpiArtifactType;
+import com.figaf.plugin.tasks.AbstractArtifactTask;
+import com.figaf.plugin.tasks.DeployArtifact;
+import com.figaf.plugin.tasks.DownloadArtifact;
+import com.figaf.plugin.tasks.UploadArtifact;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -81,7 +84,7 @@ public class CpiPlugin implements Plugin<Project> {
                 ignoreFilesList.addAll(ignoreFilesListProperty.get());
             }
             abstractArtifactTask.setIgnoreFilesList(ignoreFilesList);
-            abstractArtifactTask.setArtifactType(ArtifactType.valueOf(extension.getArtifactType().getOrNull()));
+            abstractArtifactTask.setArtifactType(CpiArtifactType.valueOf(extension.getArtifactType().getOrNull()));
             abstractArtifactTask.setHttpClientsFactory(extension.getHttpClientsFactory().getOrElse(new HttpClientsFactory()));
             abstractArtifactTask.setUseSeparateFolderForEachArtifactType(extension.getUseSeparateFolderForEachArtifactType().getOrElse(false));
         } catch (Exception ex) {
