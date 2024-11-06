@@ -46,7 +46,7 @@ public class DeployArtifact extends AbstractArtifactTask {
         while (!started && numberOfAttempts <= MAX_NUMBER_OF_ATTEMPTS) {
             IntegrationContent integrationContent;
             try {
-                integrationContent = integrationContentClient.getIntegrationRuntimeArtifactByName(requestContext, artifactTechnicalName);
+                integrationContent = integrationContentClient.getIntegrationRuntimeArtifact(requestContext, artifactTechnicalName);
             } catch (Exception ex) {
                 System.err.println("Check Public API Client Credentials. If you are sure that they are correct, try to execute 'gradlew --stop' to clean gradle cache and rerun the task");
                 throw ex;

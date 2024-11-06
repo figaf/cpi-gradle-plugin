@@ -7,6 +7,8 @@ import org.gradle.api.Project;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.SetProperty;
 
+import java.io.File;
+
 /**
  * @author Arsenii Istlentev
  */
@@ -28,7 +30,11 @@ public class CpiPluginExtension {
 
     private final Property<String> ssoUrl;
 
-    private final Property<Boolean> useCustomIdp;
+    private final Property<String> webApiAccessMode;
+
+    private final Property<File> certificateFile;
+
+    private final Property<String> certificatePassword;
 
     private final Property<String> samlUrl;
 
@@ -78,7 +84,9 @@ public class CpiPluginExtension {
         this.sourceFilePath = project.getObjects().property(String.class);
         this.loginPageUrl = project.getObjects().property(String.class);
         this.ssoUrl = project.getObjects().property(String.class);
-        this.useCustomIdp = project.getObjects().property(Boolean.class);
+        this.webApiAccessMode = project.getObjects().property(String.class);
+        this.certificateFile = project.getObjects().property(File.class);
+        this.certificatePassword = project.getObjects().property(String.class);
         this.samlUrl = project.getObjects().property(String.class);
         this.figafAgentId = project.getObjects().property(String.class);
         this.idpName = project.getObjects().property(String.class);

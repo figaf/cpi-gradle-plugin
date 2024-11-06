@@ -2,6 +2,7 @@ package com.figaf.plugin;
 
 import com.figaf.integration.common.entity.AuthenticationType;
 import com.figaf.integration.common.entity.CloudPlatformType;
+import com.figaf.integration.common.entity.WebApiAccessMode;
 import com.figaf.integration.common.factory.HttpClientsFactory;
 import com.figaf.integration.cpi.entity.designtime_artifacts.CpiArtifactType;
 import com.figaf.plugin.tasks.AbstractArtifactTask;
@@ -57,7 +58,17 @@ public class CpiPlugin implements Plugin<Project> {
 
             abstractArtifactTask.setLoginPageUrl(extension.getLoginPageUrl().getOrNull());
             abstractArtifactTask.setSsoUrl(extension.getSsoUrl().getOrNull());
-            abstractArtifactTask.setUseCustomIdp(extension.getUseCustomIdp().getOrElse(false));
+
+            String webApiAccessModeString = extension.getWebApiAccessMode().getOrNull();
+            if (StringUtils.isNotEmpty(webApiAccessModeString)) {
+                abstractArtifactTask.setWebApiAccessMode(WebApiAccessMode.valueOf(webApiAccessModeString));
+            } else {
+                abstractArtifactTask.setWebApiAccessMode(WebApiAccessMode.S_USER);
+            }
+
+            abstractArtifactTask.setCertificateFile(extension.getCertificateFile().getOrNull());
+            abstractArtifactTask.setCertificatePassword(extension.getCertificatePassword().getOrNull());
+
             abstractArtifactTask.setSamlUrl(extension.getSamlUrl().getOrNull());
             abstractArtifactTask.setFigafAgentId(extension.getFigafAgentId().getOrNull());
             abstractArtifactTask.setIdpName(extension.getIdpName().getOrNull());
