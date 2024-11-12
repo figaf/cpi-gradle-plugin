@@ -2,6 +2,7 @@ package com.figaf.plugin.tasks;
 
 import com.figaf.integration.cpi.entity.runtime_artifacts.IntegrationContent;
 import com.figaf.integration.cpi.entity.runtime_artifacts.IntegrationContentErrorInformation;
+import com.figaf.integration.cpi.entity.runtime_artifacts.RuntimeArtifactIdentifier;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -42,11 +43,16 @@ public class DeployArtifact extends AbstractArtifactTask {
                 throw new RuntimeException(String.format("Deployment of %s has failed", artifactTechnicalName));
             }
         }
+
+        RuntimeArtifactIdentifier runtimeArtifactIdentifier = RuntimeArtifactIdentifier.builder()
+            .technicalName(artifactTechnicalName)
+            .build();
+
         boolean started = false;
         while (!started && numberOfAttempts <= MAX_NUMBER_OF_ATTEMPTS) {
             IntegrationContent integrationContent;
             try {
-                integrationContent = integrationContentClient.getIntegrationRuntimeArtifact(requestContext, artifactTechnicalName);
+                integrationContent = integrationContentClient.getIntegrationRuntimeArtifact(requestContext, runtimeArtifactIdentifier);
             } catch (Exception ex) {
                 System.err.println("Check Public API Client Credentials. If you are sure that they are correct, try to execute 'gradlew --stop' to clean gradle cache and rerun the task");
                 throw ex;
