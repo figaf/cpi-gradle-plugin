@@ -1,13 +1,18 @@
 plugins {
-    id 'com.gradle.plugin-publish' version '0.11.0'
+    id 'com.gradle.plugin-publish' version '1.3.0'
     id "java-gradle-plugin"
-    id "java"
-    id "maven"
+    id "java-library"
     id 'maven-publish'
 }
 
 group = 'com.figaf'
-version = '2.16.RELEASE'
+version = '3.0.RELEASE'
+
+ext {
+    lombokVersion = '1.18.34'
+    cpiApiVersion = '3.1-IRT-4663-SNAPSHOT'
+    integrationCommonsVersion = '2.1-IRT-4663-SNAPSHOT'
+}
 
 repositories {
     mavenCentral()
@@ -27,18 +32,18 @@ publishing {
 }
 
 dependencies {
-    compile gradleApi()
-    compileOnly 'org.projectlombok:lombok:1.18.8'
-    annotationProcessor 'org.projectlombok:lombok:1.18.8'
+//    implementation gradleApi()
+    compileOnly "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 
-    compile 'com.github.figaf:cpi-api:2.20'
-    compile 'com.github.figaf:integration-commons:1.21'
-    compile 'org.zeroturnaround:zt-zip:1.13'
-    compile 'com.squareup.okhttp3:okhttp:4.0.0'
-    compile 'org.dom4j:dom4j:2.1.3'
-    compile 'jaxen:jaxen:1.2.0'
+    api "com.github.figaf:cpi-api:${cpiApiVersion}"
+    api "com.github.figaf:integration-commons:${integrationCommonsVersion}"
+    implementation 'org.zeroturnaround:zt-zip:1.13'
+    implementation 'com.squareup.okhttp3:okhttp:4.0.0'
+    implementation 'org.dom4j:dom4j:2.1.3'
+    implementation 'jaxen:jaxen:1.2.0'
 
-    testCompile group: 'junit', name: 'junit', version: '4.4'
+    testImplementation 'junit:junit:4.4'
 }
 
 gradlePlugin {
@@ -46,19 +51,11 @@ gradlePlugin {
         cpiPlugin {
             id = 'com.figaf.cpi-plugin'
             implementationClass = 'com.figaf.plugin.CpiPlugin'
-        }
-    }
-}
-
-pluginBundle {
-    website = 'https://github.com/figaf/cpi-gradle-plugin'
-    vcsUrl = 'https://github.com/figaf/cpi-gradle-plugin.git'
-    description = 'Figaf SAP CPI Plugin'
-    tags = ['sap', 'cpi', 'figaf']
-
-    plugins {
-        cpiPlugin {
             displayName = 'Figaf SAP CPI Plugin'
+            website = 'https://github.com/figaf/cpi-gradle-plugin'
+            vcsUrl = 'https://github.com/figaf/cpi-gradle-plugin.git'
+            description = 'Figaf SAP CPI Plugin'
+            tags = ['sap', 'cpi', 'figaf']
         }
     }
 }

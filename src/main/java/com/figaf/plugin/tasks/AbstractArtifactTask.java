@@ -6,21 +6,26 @@ import com.figaf.integration.cpi.client.*;
 import com.figaf.integration.cpi.entity.designtime_artifacts.CpiArtifact;
 import com.figaf.integration.cpi.entity.designtime_artifacts.CpiArtifactType;
 import com.figaf.integration.cpi.entity.designtime_artifacts.IntegrationPackage;
+import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.DefaultTask;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.*;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static java.lang.String.format;
+
 /**
  * @author Arsenii Istlentev
  */
+@Getter
 @Setter
 public abstract class AbstractArtifactTask extends DefaultTask {
 
@@ -43,7 +48,13 @@ public abstract class AbstractArtifactTask extends DefaultTask {
     protected String ssoUrl;
 
     @Input
-    protected boolean useCustomIdp;
+    protected WebApiAccessMode webApiAccessMode;
+
+    @InputFile
+    protected File certificateFile;
+
+    @Input
+    protected String certificatePassword;
 
     @Input
     protected String samlUrl;
@@ -79,9 +90,11 @@ public abstract class AbstractArtifactTask extends DefaultTask {
     protected String sourceFilePath;
 
     @Input
+    @Optional
     protected String packageTechnicalName;
 
     @Input
+    @Optional
     protected String artifactTechnicalName;
 
     @Input
@@ -96,30 +109,46 @@ public abstract class AbstractArtifactTask extends DefaultTask {
     @Input
     protected boolean useSeparateFolderForEachArtifactType;
 
+    @Internal
     protected String artifactExternalId;
 
+    @Internal
     protected String packageExternalId;
 
+    @Internal
     protected ConnectionProperties cpiConnectionProperties;
 
+    @Internal
     protected RequestContext requestContext;
 
+    @Internal
     protected String deployedBundleVersion;
 
+    @Internal
     protected File sourceFolder;
 
+    @Internal
     protected IntegrationPackageClient integrationPackageClient;
 
+    @Internal
     protected CpiIntegrationFlowClient cpiIntegrationFlowClient;
 
+    @Internal
     protected CpiValueMappingClient cpiValueMappingClient;
 
+    @Internal
     protected CpiScriptCollectionClient cpiScriptCollectionClient;
 
+    @Internal
     protected CpiMessageMappingClient cpiMessageMappingClient;
+
+    @Internal
     protected CpiFunctionLibrariesClient cpiFunctionLibrariesClient;
+
+    @Internal
     protected CpiRuntimeArtifactClient cpiRuntimeArtifactClient;
 
+    @Internal
     protected IntegrationContentClient integrationContentClient;
 
     public AbstractArtifactTask() {
@@ -147,7 +176,7 @@ public abstract class AbstractArtifactTask extends DefaultTask {
         System.out.println("httpClientsFactory = " + httpClientsFactory);
         System.out.println("loginPageUrl = " + loginPageUrl);
         System.out.println("ssoUrl = " + ssoUrl);
-        System.out.println("useCustomIdp = " + useCustomIdp);
+        System.out.println("webApiAccessMode = " + webApiAccessMode);
         System.out.println("samlUrl = " + samlUrl);
         System.out.println("figafAgentId = " + figafAgentId);
         System.out.println("idpName = " + idpName);
@@ -174,7 +203,7 @@ public abstract class AbstractArtifactTask extends DefaultTask {
         requestContext.setRestTemplateWrapperKey("");
         requestContext.setLoginPageUrl(loginPageUrl);
         requestContext.setSsoUrl(ssoUrl);
-        requestContext.setUseCustomIdp(useCustomIdp);
+        requestContext.setWebApiAccessMode(webApiAccessMode);
         requestContext.setSamlUrl(samlUrl);
         requestContext.setFigafAgentId(figafAgentId);
         requestContext.setIdpName(idpName);
@@ -184,6 +213,15 @@ public abstract class AbstractArtifactTask extends DefaultTask {
         requestContext.setAuthenticationType(authenticationType);
         requestContext.setClientId(publicApiClientId);
         requestContext.setClientSecret(publicApiClientSecret);
+
+        if (certificateFile != null) {
+            try {
+                requestContext.setCertificate(FileUtils.readFileToByteArray(certificateFile));
+            } catch (IOException e) {
+                throw new RuntimeException(format("Can't load certificate from %s", certificateFile.getAbsoluteFile()), e);
+            }
+        }
+        requestContext.setCertificatePassword(certificatePassword);
 
         sourceFolder = new File(sourceFilePath);
 
@@ -200,7 +238,7 @@ public abstract class AbstractArtifactTask extends DefaultTask {
         if (integrationPackage != null) {
             packageExternalId = integrationPackage.getExternalId();
         } else if (checkObjectsExistence) {
-            throw new RuntimeException(String.format("Cannot find package with name %s", packageTechnicalName));
+            throw new RuntimeException(format("Cannot find package with name %s", packageTechnicalName));
         }
 
         // if packageExternalId == null then package doesn't exist and hence iFlow/Value Mapping doesn't exist
@@ -217,7 +255,7 @@ public abstract class AbstractArtifactTask extends DefaultTask {
                 artifactExternalId = cpiIntegrationObjectData.getExternalId();
                 deployedBundleVersion = cpiIntegrationObjectData.getVersion();
             } else if (checkObjectsExistence) {
-                throw new RuntimeException(String.format("Cannot find artifact with name %s in package %s", artifactTechnicalName, packageTechnicalName));
+                throw new RuntimeException(format("Cannot find artifact with name %s in package %s", artifactTechnicalName, packageTechnicalName));
             }
         }
 
@@ -275,14 +313,14 @@ public abstract class AbstractArtifactTask extends DefaultTask {
     ) {
         List<IntegrationPackage> integrationPackagesSearchResult = integrationPackageClient.getIntegrationPackages(
             requestContext,
-            String.format("TechnicalName eq '%s'", packageTechnicalName)
+            format("TechnicalName eq '%s'", packageTechnicalName)
         );
 
         if (integrationPackagesSearchResult.size() == 1) {
             return integrationPackagesSearchResult.get(0);
         } else if (integrationPackagesSearchResult.size() > 1) {
             throw new RuntimeException(
-                String.format(
+                format(
                     "Unexpected state: %d integration packages were found by name %s.",
                     integrationPackagesSearchResult.size(),
                     packageTechnicalName
