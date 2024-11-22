@@ -1,0 +1,3 @@
+nexusUrl=http://sapserv02.figaf.local:8097/nexus
+nexusUsername=user
+nexusPassword=Figaf123
