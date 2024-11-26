@@ -51,9 +51,11 @@ public abstract class AbstractArtifactTask extends DefaultTask {
     protected WebApiAccessMode webApiAccessMode;
 
     @InputFile
+    @Optional
     protected File certificateFile;
 
     @Input
+    @Optional
     protected String certificatePassword;
 
     @Input
