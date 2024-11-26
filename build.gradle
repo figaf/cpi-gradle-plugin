@@ -10,8 +10,8 @@ version = '3.0.RELEASE'
 
 ext {
     lombokVersion = '1.18.34'
-    cpiApiVersion = '3.1-IRT-4663-SNAPSHOT'
-    integrationCommonsVersion = '2.1-IRT-4663-SNAPSHOT'
+    cpiApiVersion = '3.1-IRT-4720-SNAPSHOT'
+    integrationCommonsVersion = '2.1-IRT-4720-SNAPSHOT'
 }
 
 repositories {
